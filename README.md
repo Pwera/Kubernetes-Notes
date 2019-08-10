@@ -297,17 +297,100 @@ Creating a service will create an endpoint for pods:
 - a NodePort: a port that is the same on each node ais also reachable externally
 - a LoadBalancer will route external trafiic to every node on the NodePort.
 
-
-
-``` 
-     .
-```
-Sample of Service definition (laso created using kubectl expose)
-
 ``` 
      kubectl create -f k8s/first-app/helloworld.yml
+     kubectl get pods
+     kubectl describe pod nodehelloworld.example.com 
+     kubectl create -f k8s/first-app/helloworld-nodeport-service.yml
+     minikube service helloworld-service --url
+     kubectl describe svc helloworld-service
+     kubectl delete svc helloworld-service
 ```
-Example of Service
+Example of Service, using static node port
+
+###### Labels
+Labels are key/value pairs that can be attached to objects.
+Labels are like tags in AWS or other cloud providers, used to tag resources.
+Label can be used to tag nodes, once nodes are tagged, you can use label selectors to let pods only run on specific nodes.
+
+First step, add a label or multiple labels to nodes.
+Secondly all pod that uses those labels.
+
+``` 
+    kubectl get nodes --show-labels
+    kubectl create -f k8s/deployment/helloworld-nodeselecotr.yml
+    kubectl get deployments
+    kubectl get pods
+    kubectl label nodes minikube hardware=high-spec
+    kubectl get nodes --show-labels
+
+```
+Example of lables
+
+###### Health checks
+There are two different type of health check:
+- Running a command in the container periodically
+- Periodic check on a URL
+
+``` 
+    kubectl create -f k8s/deployment/helloworld-healthcheck.yml
+    kubectl get deployments
+    kubectl get pods
+    kubectl edit deployment/helloworld-deployment
+
+```
+Example of Health checks
+
+###### Readiness Probe.
+Besides livenessProbes you can also use readinessProbe on a container within a Pod.
+LivenessProbes indicate wheter container is running.
+If the check fail, the container will be restarted.
+ReadinessProbe indicateswhether the container is ready to serve requests.
+If the check fails the container will not be restarted, but the Pod's IP address will be removed ffom the service, so it'll not serve any requesty anymore.
+``` 
+     kubectl create -f k8s/deployment/helloworld-liveness-readiness.yml && watch -n1 kubectl get pods
+```
+
+###### Pod state
+State Running
+- Pod has been bound to a node.
+- All containers have been created.
+- At least on container is still running, or is starting/restarting.
+State Pending:
+- Pod has been accepted but is not running
+- Happens when the container image is still downloading
+- If the pod cannot be scheduled because of resource constraints (leak of cpu/ memmory resources)
+State Succeeded
+- All containers within this pod have been terminated successfully and will not be restarted
+State Failed
+- All containers within this pod have been terminated, and at least oe container returned a failure code
+State Unknown
+- The state of the pod couldn't be detemined
+- Eg. network problems
+``` 
+     kubectl pod <pod_name> -n kube-system
+```
+Get pod conditions.
+There are 5 different types of PodConditions:
+- PodScheduled
+- Ready
+- Initialized
+- Unschedulable
+- ContainersReady
+There also container state
+``` 
+     kubectl get pod <pod_name> -n kube-system -o yaml
+```
+There are 3 different types of containers state:
+- Running
+- Terminated
+- Waiting
+
+######  Secrets
+Secrets provides a way in Kubernetes to distribute credentials, keys, passwords, etc.
+Kubernetes itself uses this Secrets mechanism to provide the credentials to access the internal API.
+We can use as environmental variables, as file in pod. Can be used for dotenv files.
+
 
 
 ###### Kops (Kubernetes Operations)
@@ -326,9 +409,3 @@ Works only on Mac / Linux.
 ``` 
      .
 ```
-
-
-
-
-
-
