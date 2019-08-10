@@ -168,7 +168,7 @@ Attach to running process. Acces to logs.
 ```
 Runn a command inside running service.
 
-######Setting up Load Balancer
+###### Setting up Load Balancer
 Load Balancer will route the traffic to the correct pod on Kubernetes.
 ``` 
      kubectl create -f k8s/elb/helloworld.yml
@@ -183,16 +183,16 @@ Replication Controller will ensure a specific of pod replicas will run at all ti
 A pods created with the replica controller will automatically be replaced if they fail, get delected, or are terminated.
 We can horizontally scalling only stateless pods.
 
-``` 
+```
     apiVersion: v1
-    **kind: ReplicationController**
+    kind: ReplicationController
     metadata:
       name: helloworld-controller
     spec:
-      **replicas: 2**
+      replicas: 2
       selector:
         app: helloworld
-      **template:**
+      template:
         metadata:
           labels:
             app: helloworld
@@ -245,6 +245,70 @@ With deployment object you can:
               containerPort: 3000
 
 ```
+
+
+``` 
+     kubectl get deployments 
+```
+Get information on current deployments.
+
+``` 
+     kubectl get rs
+```
+Get information about the replisa sets.
+
+``` 
+     kubectl get pods --show-labels
+```
+Get pods and show labels attached to those pods.
+
+``` 
+     kubectl rollout status deployment/helloworld-deployment
+```
+Get deployment status.
+
+
+``` 
+     kubectl create -f k8s/deployment/helloworld.yml
+     kubectl get deployments
+     kubectl get rs
+     kubectl get pods
+     kubectl expose deployment helloworld-deployment --type=NodePort
+     kubectl get service
+     kubectl describe service helloworld-deployment
+     minikube service helloworld-deployment --url
+     kubectl set image k8s/deployment/helloworld-deployment k8s-demo=wardviaene/k8s-demo:2
+     kubectl rollout status k8s/deployment/helloworld-deployment
+     kubectl history k8s/deployment/helloworld-deployment
+     kubectl undo k8s/deployment/helloworld-deployment
+```
+Example of deployment
+
+###### Services
+
+Pods are very dynamic, they come and go  on the Kubernetes cluster.
+When using a Replication Controller, pods are terminated and created during scalling operations.
+When using Deployments, when updating the image verson, pods are terminated and new pods take the place of older pods.
+Pods should neber be accessed directly, but always through a Service.
+A service is th logical bridge between the "mortal" pods and other service or end-user.
+When using "kubectl expose" command, you created a new service for Pods, so it could be accessed externally.
+Creating a service will create an endpoint for pods:
+- a CluserIP: a virtual IP address only reachable from within the cluster (default)
+- a NodePort: a port that is the same on each node ais also reachable externally
+- a LoadBalancer will route external trafiic to every node on the NodePort.
+
+
+
+``` 
+     .
+```
+Sample of Service definition (laso created using kubectl expose)
+
+``` 
+     kubectl create -f k8s/first-app/helloworld.yml
+```
+Example of Service
+
 
 ###### Kops (Kubernetes Operations)
 Tool used to spin up a highly available production cluster.
