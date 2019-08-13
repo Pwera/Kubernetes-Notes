@@ -390,7 +390,61 @@ There are 3 different types of containers state:
 Secrets provides a way in Kubernetes to distribute credentials, keys, passwords, etc.
 Kubernetes itself uses this Secrets mechanism to provide the credentials to access the internal API.
 We can use as environmental variables, as file in pod. Can be used for dotenv files.
+``` 
+     echo -n "root > ./username
+     echo -n "password" > ./password
+     kubectl create secret generic db-user-pass --from-file=./username --from-file=./password
+```
 
+A secret can also be an SSH key or an SSL certificate.
+
+``` 
+     kubectl create -f k8s/deployment/helloworld-secrets.yml
+     kubectl create -f k8s/deployment/helloworld-secrets-volumes.yml
+     kubectl get pods
+     kubectl exec <pod_name> -i -t -- /bin/bash
+     cat /etc/creds/username
+
+```
+Example of secrets
+
+``` 
+     kubectl create -f k8s/wordpress/wordpress-secrets.yml
+     kubectl create -f k8s/wordpress/wordpress-single-deployment-no-volumes.yml
+     kubectl create -f k8s/wordpress/wordpress-service.yml
+     minikube service wordpress-service --url
+```
+Wordpress  example with no volumes
+
+
+``` 
+     minikube dashboard --url
+```
+Show Kubernetes dashboard
+
+######  Service Discovery using DNS.
+As on Kubernetes 1.3, DNS is built-in service launched automatically using the addon manager.
+The addons are on master node.
+The DNS service can be used within pods to find other services running on the same cluster.
+Multiple container within 1 pod don't need the service, as they can contact each other directly.
+A container in the same pod can connect the port of the other container directly using localhost:port.
+To make DNS work, a pod will need a Service Definition.
+Default stands for the deafult namespace Pods and services can be launched in different namespaces - to logically separate cluster.
+
+``` 
+     kubectl create -f k8s/service-discovery/secrets.yml
+     kubectl create -f k8s/service-discovery/database.yml
+     kubectl create -f k8s/service-discovery/database-service.yml
+     kubectl create -f k8s/service-discovery/helloworld-db.yml
+     kubectl create -f k8s/service-discovery/helloworld-db-service.yml
+     minikube service helloworld-db-service --url
+     kubectl logs <deploymen_name>
+```
+Example: Service Discovery
+
+``` 
+     .
+```
 
 
 ###### Kops (Kubernetes Operations)
