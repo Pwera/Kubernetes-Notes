@@ -495,6 +495,34 @@ To use volumes, you need to create a pod with a volume definition.
 The Kubernetes plugins have the capability to provision storage.
 This is done using the StorageClass object.
 
+###### Pod Presets
+Can inject information into pods at runtime.
+Pod Presets are used to inject Kubernetes resources like Secrets, ConfigMaps, Volumes and environmental varibles.
+When injecting environment variables and volumemounts, the pod presets will apply the changes to all containers within the pod.
+
+``` 
+     kubectl create -f k8s/pod-presets/pod-presets.yml
+     kubectl get podpresets
+     kubectl create -f deployments.yml
+```
+Example of  Presets
+
+###### StatefulSets
+It's introduced to be able to run stateful applications.
+A StatefulSet will allow stateful app to use DNS to find other peers.
+``` 
+     kubectl create -f k8s/statefulset/cassandra.yaml
+     kubectl get pod
+     kubectl get pv
+     watch kubectl get pod
+```
+
+
+###### DeamonSets
+Deamon Sets ensure that every single node in the Kubernetes cluster runs that same pod resource.
+This is useful if you want to ensure that a certain pod is running on every single kubernetes node.
+When a node is added to the cluster, a new pod will be started automatically.
+Same, when a node is removed, the pod will not be rescheduled on another node.
 
 
 ###### Kops (Kubernetes Operations)
@@ -508,8 +536,4 @@ Works only on Mac / Linux.
 
 ``` 
      .
-```
-
-``` 
-     .
-```
+``
