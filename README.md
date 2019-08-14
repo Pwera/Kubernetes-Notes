@@ -442,9 +442,59 @@ Default stands for the deafult namespace Pods and services can be launched in di
 ```
 Example: Service Discovery
 
+######  ConfigMap
+Configuration parameters that are not secret, can be put in a ConfigMap.
+The ConfigMap key-value pairs can then be read by the app uaing:
+- Environmental variables
+- Container commandline arguments in the Pod configuration
+- Using volumes
+ConfigMap can also containe full configuration files.
+Using ConfigMap:
+- You can create a pod that exposes the configMap usin a volume
+- You can create a pod that exposesthe configMap as environment variables.
+
 ``` 
-     .
+     kubectl create configmap nginx-config --fromfile=k8s/configmap/reverseproxy.conf
+     kubectl get configmap nginx-config -o yaml
+     kubectl create -f k8s/configmap/nginx.yml
+     kubectl create -f k8s/configmap/nginx-service.yml
+     kubectl service helloworld-nginx-service --url
 ```
+Example: ConfigMap
+
+######  Ingress
+Ingress is a solution available since Kubernetes 1.1 that allows inbound connections to the cluster. 
+It's alternative to the external LoadBalancer and nodePorts
+Ingress allows to easily expose services that need to be accessible form outsidde to the cluster.
+With ingress you can run own ingress controller (basically a loadbalancer) within the Kubernetes cluster.
+You can create ingress rules using the ingress object.
+
+``` 
+     kubectl create -f k8s/ingress/ingress.yml 
+     kubectl create -f k8s/ingress/nginx-ingress-controller.yml
+     kubectl create -f k8s/ingress/echoservice.yml 
+     kubectl create -f k8s/ingress/helloworld-v1.yml 
+     kubectl create -f k8s/ingress/helloworld-v2.yml 
+     kubectl get pod
+```
+Example of Ingress Controller
+
+###### External DNS
+On public cloud providers, you can use the ingress controller to reduce the cost of LoadBalancer.
+You can use one LB that capures all the external traffic and send it to the ingress controller.
+The ingress controller can be configured to route thedifferent traffic to your apps based on http rules(host and prefixes).
+This only works for https- based applications.
+
+###### Volumes
+Volumes in Kubernetes allow to store data outside the container.
+When a container stops, all data on the container itself is lost.
+Persistent volumes in Kubernetes allow to attach a volume to a container that will exists even when the container stops. Volumes than can re reattached.
+To use volumes, you need to create a pod with a volume definition.
+
+###### Volumes AutoProvisioning
+The Kubernetes plugins have the capability to provision storage.
+This is done using the StorageClass object.
+
 
 
 ###### Kops (Kubernetes Operations)
