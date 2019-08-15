@@ -524,16 +524,91 @@ This is useful if you want to ensure that a certain pod is running on every sing
 When a node is added to the cluster, a new pod will be started automatically.
 Same, when a node is removed, the pod will not be rescheduled on another node.
 
+###### Resource Usage Monitoring (deprecated)
+Heapster enables Container Cluster Monitoring and Performance Analysis.
+It's providing a monitoring platform for Kubernetes.
+Heapster exports clusters metricks via REST endpoints.
+You can use different backends with Heapster.
+
+###### Autoscaling
+Kubernetes has the possibility to automatically scale pods based on metrics.
+Kubernetes can automatically scale a Deployment, Replication Controller or replicaSet.
+In Kubernetes 1.3 scalling based on CPU usage is possile out of the box.
+Autoscaling will use heapster, the monitoring tool, to gather its metrics and make scaling decisions.
+
+``` 
+     kubectl create -f k8s/autoscaling/hpa-example.yml 
+     kubectl get hpa
+     kubectl run -i --tty load-generator --image=busybox /bin/sh
+     while true; do wget -q -0- <http>; done
+     kubectl get hpa
+     kubectl get pod
+
+```
+Example of Autoscaling
+
+###### Affinity, anti-affinity
+Affinity, anti-affinity feature allows to do more complex scheduling then the nodeSelector and also works on pods.
+The rules are not hard requirements, bu rather a prefferred rule.
+For example, a rule that makes sure 2 different pods will never be on the same node.
+
+###### Custom Resource Definitions
+Lets extend the Kubernetes API.
+Resources are the endpoints in the Kubernetes API that store collections of API Objects.
+For example, there is the built-in Deployment resource, that can be used to deploy applications.
+In the yaml files you describe the object, using the Deployment resource type.
+You crete the object on the cluster by using kubectl.
+Operators, exmplained in the next lecture, use these CRDs to extend the Kubernets API, with their own functionality.
+
+###### Operators
+Is a method of packaging, deploying and managing a Kubernetes application.
+An operator contains a lot of the management logic that you as an administrator or user might want, rather than having to implement it yourself.
+
+###### Namespaces
+Namespaces allow to create virtual clusters within the same physical cluser.
+Namespaces logically separates you cluster.
+The standard namespace is called default and that's where all resources are launched in by default.
+There is also namespace for kubernetes specific resources, called kube-system.
+We can also limit objects (secrets, services, configmaps).
+``` 
+     kubectl get namespaces
+```
+List namespaces
+
+``` 
+     kubectl create -f k8s/resourcequotas/resourcequota.yml
+     kubectl create -f k8s/resourcequotas/helloworld-no-quotas.yml
+     kubectl get deploy --namespace=myspace
+     kubectl describe rs/<deploy> --namespace=myspace
+     kubectl create -f k8s/resourcequotas/helloworld-with-quotas.yml
+```
+Example of Namespaces
+
+###### Networking
+Container to container communication  within a pod through localhost and the port number.
+Pod to Service communication using nodePort using DNS.
+External to service communication using loadbalancer, ingress, nodePort.
+Pod to pod communication.
+Kubernetes assumes that pods should be able to communicate to other pods, regardless of which node thay are running. 
+Every pod has its own IP address. Pods on different nodes need to be able to communicate to each other using those IP addresses.
+Not every cloud providers has VPC. Thre are alternatives:
+- Container Network Interface (CNI).
+Software that provides libraries/ plugins for network interface within containers eg. Calico, Weave.
+- An Overlay Network eg. Flannel
+
+
+
+
+
+
 
 ###### Kops (Kubernetes Operations)
 Tool used to spin up a highly available production cluster.
 Used to setup Kubernetes on AWS.
 Works only on Mac / Linux.
 
-``` 
-     .
-```
+
 
 ``` 
      .
-``
+```
