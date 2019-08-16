@@ -596,8 +596,83 @@ Not every cloud providers has VPC. Thre are alternatives:
 Software that provides libraries/ plugins for network interface within containers eg. Calico, Weave.
 - An Overlay Network eg. Flannel
 
+###### Node Maintenance
+It's the Node Controller that is responsible for managing the Node objects.
+It assigns IP sapce to the node when a new node is launched.
+Its keeps the node list  up to date with the avaialable machines.
+The node controller is also monitoring the health of the node.
+If a node is unhealthy it get deleted
+Pods running on the unhealthy node will theh get rescheduled.
+Node Maintenance
+When addid a new node, the kubelet will attempt to register itself.
+This is called self-registration and is the default behavior.
+It allows to easily add more nodes to the cluster without making API changes.
 
 
+###### Helm
+Helm is a single binary that manages deploying Charts to Kubernetes. A chart is a packaged unit of kubernetes software(collection of files that describe a set of Kubernetes reources).
+A single chart can deploy an app, a piece of software, or database.
+Chart uses tempaltes, that are typically developed by a package maintainer.
+Then will generate yaml files that  Kubernetes understands.
+Helm allows to do upgrades and rollbacks
+``` 
+     helm init 
+     helm install
+     helm search 
+     helm list
+     helm upgrade
+     helm rollback
+```
+
+``` 
+     helm create mychart
+```
+will create Chart.yaml, values.yaml, templates/
+
+###### Serverless
+Public Cloud providers often provide Serverless capabilities in which you can  deploy functions, rather than instances or containers.
+- Azure functions
+- AWS Labmda
+- Google Cloud Functions
+With these products, you don't need to manager the underlaying infrastacture.
+The functions are also not "always-on" unlike containers and instances, which can greatly reduce the cost of serverless if the function doesn't need to be executed a lot.
+Serverless in public cloud can reduce the complexity, operational coasts, and engineering time to get code running.
+- OpenFaas
+- Kubeless
+- Fission
+- OpenWhisk
+You can install and use any of the projects to let developers functions on Kubernetes.
+
+###### Kubeless
+Kubeless is a Kubernetes native framerowk, it laverages the Kubernetes resources to provide auto-scaling, API routing, monitoring etc.
+It uses Custom Resource Definitions to be able to create functions.
+Once you deployed your function, you'll need to determine how it'll be triggered.
+``` 
+     wget https://github.com/kubeless/kubeless/releases/download/v1.0.4/kubeless_linux-amd64.zip
+    unzip kubeless_linux-amd64.zip
+    sudo mv bundles/kubeless_linux-amd64/kubeless /usr/local/bin
+    rm -r bundles/
+    kubectl create ns kubeless
+    kubectl create -f https://github.com/kubeless/kubeless/releases/download/v1.0.4/kubeless-v1.0.4.yaml
+    kubeless function deploy hello --runtime python2.7 \
+                               --from-file k8s/kubeless/python-example/example.py \
+                               --handler test.hello
+   kubeless function deploy myfunction --runtime nodejs6 \
+                                --dependencies node-example/package.json \
+                                --handler test.myfunction \
+                                --from-file k8s/kubeless/node-example/example.js
+
+    kubeless function ls
+    kubeless function call myfunction --data 'This is some data'
+    kubeless logs <pod_name>
+```
+
+``` 
+     kubectl create -f nginx-ingress-controller-with-elb.yml
+    kubeless trigger http create myfunction --function-name myfunction --hostname myfunction.kubernetes.newtech.academy
+    kubectl get svc -n ingress-nginx -o wide
+    kubectl get ingresss
+```
 
 
 
