@@ -675,6 +675,23 @@ Once you deployed your function, you'll need to determine how it'll be triggered
 ```
 
 
+###### Istio
+``` 
+     wget https://github.com/istio/istio/releases/download/1.2.4/istio-1.2.4-linux.tar.gz
+     tar xzf istio-1.2.4-linux.tar.gz
+     kubectl apply -f istio-1.2.4/install/kubernetes/hem/istio/templates/crds.yaml
+     kubectl get crds
+     kubectl apply -f istio-1.2.4/install/kubernetes/istio-demo.yaml
+     kubectl get pod -n isto-system
+     kubectl apply -f <(istioctl kube-inject -f k8s/istio/helloworld.yaml)
+     kubectl get pods
+     kubectl apply -f k8s/istio/helloworld-gw.yaml 
+
+```
+: Retries
+: Canary Deployments
+
+
 
 
 ###### Kops (Kubernetes Operations)
