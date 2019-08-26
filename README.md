@@ -690,7 +690,14 @@ Once you deployed your function, you'll need to determine how it'll be triggered
 ```
 : Retries
 : Canary Deployments
+The goals of Istio are:
+- Security by default: no changes needed for application code and infrastucture.
+- Defence in depth: integrate with existing security systems to provide multiple layers of defence.
+- Zero-trust network: build security solutions on untrusted networks.
 
+Istio provides two types of authentication:
+- Transport authentication (service to service authentication) using mutial TLS.
+- Origin authentication (end-end authentication) using JSON Web Token.
 
 
 
