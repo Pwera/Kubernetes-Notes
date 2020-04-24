@@ -215,9 +215,12 @@ We can horizontally scalling only stateless pods.
 ```
 
 ###### Deployments
+
+![Kubernetes Glossary](/k8s/imgs/kubernetesGlossary.png)
+
 Replication Set is the next generation of Replication Controller.
 It support a new selector that can selection based on filtering according a set values, e.g environment.
-Replica Set i used by the Deployment object.
+Replica Set is used by the Deployment object.
 When using the deployment object, you define the state of application. Kubernetes will then make sure the cluster matches your desired state.
 With deployment object you can:
 - Create a deployment
@@ -479,6 +482,10 @@ You can create ingress rules using the ingress object.
 ```
 Example of Ingress Controller
 
+###### Egress Gateway
+Every traffic that needs to exit the service mesh needs to go via Egress Gateway.
+
+
 ###### External DNS
 On public cloud providers, you can use the ingress controller to reduce the cost of LoadBalancer.
 You can use one LB that capures all the external traffic and send it to the ingress controller.
@@ -609,6 +616,15 @@ This is called self-registration and is the default behavior.
 It allows to easily add more nodes to the cluster without making API changes.
 
 
+###### Components
+- Envoy: Sidecar proxy per microservice that handles inbound/outbound traffic within each Pod
+- Gateway: Inbound gateways (Ingress) and Output gateway (Engress)
+- Mixer: Policy/precondition check and telemetry
+- Pilot: Converts high level routing rules that control traffic behaviour into Envoy-specific configurations, propagates them to the sidecar at runtime
+- Citadel: Certificate Authority for service-to-service auth and encryption
+
+
+
 ###### Helm
 Helm is a single binary that manages deploying Charts to Kubernetes. A chart is a packaged unit of kubernetes software(collection of files that describe a set of Kubernetes reources).
 A single chart can deploy an app, a piece of software, or database.
@@ -686,11 +702,26 @@ Once you deployed your function, you'll need to determine how it'll be triggered
      kubectl apply -f <(istioctl kube-inject -f k8s/istio/helloworld.yaml)
      kubectl get pods
      kubectl apply -f k8s/istio/helloworld-gw.yaml 
+```
+Install Istio 1.2.4
+
+
 
 ```
-: Retries
-: Canary Deployments
+curl -L https://istio.io/downloadIstio | sh -
+cd istio-ABC
+for i in install/kubernetes/helm/istio-init/files/crd*yaml; do kubectl apply -f $i; done
+kubectl apply -f install/kubernetes/istio-demo.yaml
+kubectl get namespaces
+kubectl get pods -n istio-system
+kubectl get svc -n istio-system
+# istio-ingressgateway has already been assigned with externall IP address
+```
+Install Istio 1.5.2
+
 The goals of Istio are:
+- Retries
+- Canary Deployments
 - Security by default: no changes needed for application code and infrastucture.
 - Defence in depth: integrate with existing security systems to provide multiple layers of defence.
 - Zero-trust network: build security solutions on untrusted networks.
@@ -699,15 +730,42 @@ Istio provides two types of authentication:
 - Transport authentication (service to service authentication) using mutial TLS.
 - Origin authentication (end-end authentication) using JSON Web Token.
 
+###### Istio Glossary
+- Gateway: configures a load balancer for HTTP/TCP traffic, enables ingess traffic into the service mesh (just like Ingress)
+- Virual Service: defines the rules that control how requests for a service are routed within the service mesh
+- Destination rule: configures the set of policies to be aplied to a request after VirtualService routing has occurred
+- Service Version aka Subset allows to select a subset of pods based on labels
+- Service Entry enables requests to service outside of the service mesh
+
+![Istio Glossary](/k8s/imgs/istioGlossary.png)
+
+
+``` 
+istioctl verify-install
+kubectl  cluster-info
+``` 
+Verify Istio installation
+
+
+```
+kubectl create namespace istio-demo
+kubectl label namespace istio-demo istio-injection=enabled
+# label the namespace so that the istio sidecar is working propery
+kubectl apply -f k8s/istio/nginx/nginx-app.yaml -n istio-demo
+kubectl get pods -n istio-demo
+kubectl  -n istio-demo describe pod
+# Nginx and sidecar container (istio-proxy) deployed
+kubectl apply -f k8s/istio/nginx/nginx-app-istio-gateway.yaml -n istio-demo
+# Deploy gateway for service; allow access nginx if request contains header Host: nginx-app.demo
+kubectl apply -f k8s/istio/nginx/nginx-app-istio-virtual-service.yaml -n istio-demo
+
+```
+Demo #1
+
+
 
 
 ###### Kops (Kubernetes Operations)
 Tool used to spin up a highly available production cluster.
 Used to setup Kubernetes on AWS.
 Works only on Mac / Linux.
-
-
-
-``` 
-     .
-```
