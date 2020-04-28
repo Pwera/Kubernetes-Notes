@@ -763,6 +763,77 @@ kubectl apply -f k8s/istio/nginx/nginx-app-istio-virtual-service.yaml -n istio-d
 Demo #1
 
 
+```
+kubectl label namespace default istio-injection=enabled
+kubectl get svc istio-ingressgateway -n istio-system
+export INGRESS_HOST=$(kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+echo $INGRESS_HOST
+cd k8s/istio/hello
+kubectl apply -f hello-istio.yaml 
+kubectl apply -f hello-istio-gateway.yaml 
+kubectl apply -f hello-istio-virtual-service.yaml
+kubectl get all
+watch -n 1 -d http get $INGRESS_HOST/api/hello Host:hello-istio.cloud
+```
+Demo #2 Controlling Ingress Traffic
+
+
+```
+cd k8s/istio/hello
+kubectl apply -f hello-istio-destination.yaml
+# apply the version subsets as destinations
+
+kubectl apply -f hello-istio-uri-match.yaml
+# apply path based routing
+
+http get $INGRESS_HOST/api/hello Host:hello-istio.cloud
+http get $INGRESS_HOST/api/v1/hello Host:hello-istio.cloud
+http get $INGRESS_HOST/api/v2/hello Host:hello-istio.cloud
+```
+Demo #3 Path Based Routing
+
+```
+cd k8s/istio/hello
+kubectl apply -f kubernetes/hello-istio-user-agent.yaml
+http get $INGRESS_HOST/api/hello User-Agent:Chrome Host:hello-istio.cloud
+# Reach v2
+
+http get $INGRESS_HOST/api/hello Host:hello-istio.cloud
+# Reach v1
+
+kubectl apply -f kubernetes/hello-istio-user-cookie.yaml
+http get $INGRESS_HOST/api/hello Cookie:user=packtpub Host:hello-istio.cloud
+# Reach v2
+
+http get $INGRESS_HOST/api/hello Host:hello-istio.cloud
+# Reach v1
+```
+Demo #4 Header Based Routing
+
+```
+cd k8s/istio/hello
+kubectl apply -f kubernetes/hello-istio-destination.yaml
+# apply the version subsets as destinations
+
+kubectl apply -f kubernetes/hello-istio-50-50.yaml
+http get $INGRESS_HOST/api/hello Host:hello-istio.cloud
+```
+Demo #5 Weight Based Routing
+
+```
+cd k8s/istio/hello
+kubectl apply -f hello-istio-100-0.yaml
+kubectl apply -f hello-istio-75-25.yaml
+kubectl apply -f hello-istio-50-50.yaml
+kubectl apply -f hello-istio-25-75.yaml
+kubectl apply -f hello-istio-0-100.yaml
+```
+Demo #6 Perform canary release deployment
+
+```
+
+```
+Demo #7 Controlling Egress Traffic
 
 
 ###### Kops (Kubernetes Operations)
