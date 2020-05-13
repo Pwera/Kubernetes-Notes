@@ -30,32 +30,33 @@ Minikube runs a single-node Kubernetes cluster inside a Linux VM.
 https://github.com/kubernetes/minikube
 It cannot spin up a production cluster, it's a one node machine with no high availability.
 
-``` 
-     curl -Lo minikube https://storage.googleapis.com/minikube/releases/v1.3.0/minikube-linux-amd64 && chmod +x minikube && sudo cp minikube /usr/local/bin/ && rm minikube
+```bash
+curl -Lo minikube https://storage.googleapis.com/minikube/releases/v1.3.0/minikube-linux-amd64 && chmod +x minikube && sudo cp minikube /usr/local/bin/ && rm minikube
 ```
 
-``` 
-     minikube version
+```bash
+minikube version
 ```
 Checks if Minikube is properly installed
 
-``` 
-     minikube start --wait=false && \
-     cat ~/.kube/config
+```bash
+minikube start --wait=false && \
+cat ~/.kube/config 
+# --driver=none if already running on VM
 ```
 
-``` 
-     kubectl run hello-world --image=gcr.io/google_containers/echoserver:1.4 --port=8080
+```bash
+kubectl run hello-world --image=gcr.io/google_containers/echoserver:1.4 --port=8080
 ```
 Hello World in Kubernetes.
 
-``` 
-     kubectl expose deployment hello-world --type=NodePort
+```bash
+kubectl expose deployment hello-world --type=NodePort
 ```
 Expose service to access externally. Deployment goes to non master nodes.
 
-``` 
-     minikube stop
+```bash
+minikube stop
 ```
 Stop Minikube
 
@@ -63,116 +64,116 @@ Stop Minikube
 ###### Pod  
 Pod describes an application running on Kubernetes. 
 Can container on or more containers.
-``` 
-    apiVersion: v1
-    kind: Pod
-    metadata:
-      name: nodehelloworld.example.com
-      labels:
-        app: helloworld
-    spec:
-      containers:
-      - name: k8s-demo
-        image: wardviaene/k8s-demo
-        ports:
-        - name: nodejs-port
-          containerPort: 3000
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+     name: nodehelloworld.example.com
+     labels:
+     app: helloworld
+spec:
+     containers:
+     - name: k8s-demo
+     image: wardviaene/k8s-demo
+     ports:
+     - name: nodejs-port
+     containerPort: 3000
 ```
 
-``` 
-     kubectl create -f <path_to_file>.yml
+```bash
+kubectl create -f <path_to_file>.yml
 ```
 Create Pod on the Kubernetes clsuter.
 
-``` 
-     kubectl get pod
+```bash
+kubectl get pod
 ```
 Get information about all running pods.
 
-``` 
-     kubectl describe pod <pod>
+```bash
+kubectl describe pod <pod>
 ```
 Describe one pod.
 
-``` 
-     kubectl expose pod <pod> --port=444 --name=frontend
+```bash
+kubectl expose pod <pod> --port=444 --name=frontend
 ```
 Expose the port of a pod. Creates a new service.
 
-``` 
-     kubectl port-forward <pod> 8080
+```bash
+kubectl port-forward <pod> 8080
 ```
 Forward port the exposed pod port to local machine.
 
-``` 
-     kubectl attach <podname> -i
+```bash
+kubectl attach <podname> -i
 ```
 Attach to the pod.
 
-``` 
-     kubectl exec <pod> --command
+```bash
+kubectl exec <pod> --command
 ```
 Wxecute a command on the pod
 
-``` 
-    kubectl label pods <pod> mylabel=awesome     
+```bash
+kubectl label pods <pod> mylabel=awesome     
 ```
 Add label to a pod.
 
-``` 
-     kubectl run -i -tty busybox --image=busybox --restart=Never --sh
+```bash
+kubectl run -i -tty busybox --image=busybox --restart=Never --sh
 ```
 Run a shell in a pod.
 
-``` 
-    apiVersion: v1
-    kind: Service
-    metadata:
-      name: helloworld-service
-    spec:
-      ports:
-      - port: 31001
-        nodePort: 31001
-        targetPort: nodejs-port
-        protocol: TCP
-      selector:
-        app: helloworld
-      type: NodePort
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+     name: helloworld-service
+spec:
+     ports:
+     - port: 31001
+     nodePort: 31001
+     targetPort: nodejs-port
+     protocol: TCP
+     selector:
+     app: helloworld
+     type: NodePort
 ```
 kubectl create -f app/helloworld.yml
 
-``` 
-     kubectl get pod
-     kubectl describe pod nodehelloworld.example.com
-     kubectl port-forward nodehelloworld.example.com 8081:3000
+```bash
+kubectl get pod
+kubectl describe pod nodehelloworld.example.com
+kubectl port-forward nodehelloworld.example.com 8081:3000
 ```
 
-``` 
-     kubectl expose pod nodehelloworld.example.com --type=NodePort --name <service_name>
+```bash
+kubectl expose pod nodehelloworld.example.com --type=NodePort --name <service_name>
 ```
 NodePort means that we can directly access port 3000 on the Kubernetes and it will redirect to this pod.
 
-``` 
-     minikube service <service_name> --url
+```bash
+|minikube service <service_name> --url
 ```
 Retrive service.
 
-``` 
-     kubectl attach <service_name>
+```bash
+kubectl attach <service_name>
 ```
 Attach to running process. Acces to logs.
 
-``` 
-     kubectl exec <service_name> <command>
-     kubectl exec nodehelloworld --ls /app
+```bash
+kubectl exec <service_name> <command>
+kubectl exec nodehelloworld --ls /app
 ```
 Runn a command inside running service.
 
 ###### Setting up Load Balancer
 Load Balancer will route the traffic to the correct pod on Kubernetes.
-``` 
-     kubectl create -f k8s/elb/helloworld.yml
-     kubectl create -f k8s/elb/helloworld-service.yml
+```bash
+kubectl create -f k8s/elb/helloworld.yml
+kubectl create -f k8s/elb/helloworld-service.yml
 ```
 The LoadBalancer Service will create a port that is open on every node, that can be used by the AWS LoadBalancer to connect. That port is owned by the Service, so that the traffic can be routed to the correct pod
 
@@ -183,35 +184,36 @@ Replication Controller will ensure a specific of pod replicas will run at all ti
 A pods created with the replica controller will automatically be replaced if they fail, get delected, or are terminated.
 We can horizontally scalling only stateless pods.
 
+```yaml
+apiVersion: v1
+kind: ReplicationController
+metadata:
+     name: helloworld-controller
+spec:
+     replicas: 2
+     selector:
+     app: helloworld
+     template:
+     metadata:
+     labels:
+          app: helloworld
+     spec:
+     containers:
+     - name: k8s-demo
+          image: wardviaene/k8s-demo
+          ports:
+          - name: nodejs-port
+          containerPort: 3000
 ```
-    apiVersion: v1
-    kind: ReplicationController
-    metadata:
-      name: helloworld-controller
-    spec:
-      replicas: 2
-      selector:
-        app: helloworld
-      template:
-        metadata:
-          labels:
-            app: helloworld
-        spec:
-          containers:
-          - name: k8s-demo
-            image: wardviaene/k8s-demo
-            ports:
-            - name: nodejs-port
-              containerPort: 3000
-
-    kubectl create -f k8s/replication-controller/helloworld-repl-controller.yml && \
-    kubectl get pods
-    kubectl delete pod <name>
+```bash
+kubectl create -f k8s/replication-controller/helloworld-repl-controller.yml && \
+kubectl get pods
+kubectl delete pod <name>
 ```
 
-``` 
-     kubectl scale --replicas=4 -f k8s/replication-controller/helloworld-repl-controller.yml && \
-     kubectl get pods
+```bash
+kubectl scale --replicas=4 -f k8s/replication-controller/helloworld-repl-controller.yml && \
+kubectl get pods
 ```
 
 ###### Deployments
@@ -228,62 +230,61 @@ With deployment object you can:
 - Do rolling updates (zero downtime deplyments)
 - Rollback
 - Pause/ Resume
-``` 
-     apiVersion: extensions/v1beta1
-    kind: Deployment
-    metadata:
-      name: helloworld-deployment
-    spec:
-      replicas: 3
-      template:
-        metadata:
-          labels:
-            app: helloworld
-        spec:
-          containers:
-          - name: k8s-demo
-            image: wardviaene/k8s-demo
-            ports:
-            - name: nodejs-port
-              containerPort: 3000
-
+```yaml
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+     name: helloworld-deployment
+spec:
+     replicas: 3
+     template:
+     metadata:
+     labels:
+          app: helloworld
+     spec:
+     containers:
+     - name: k8s-demo
+          image: wardviaene/k8s-demo
+          ports:
+          - name: nodejs-port
+          containerPort: 3000
 ```
 
 
-``` 
-     kubectl get deployments 
+```bash
+kubectl get deployments 
 ```
 Get information on current deployments.
 
-``` 
-     kubectl get rs
+```bash
+kubectl get rs
 ```
 Get information about the replisa sets.
 
-``` 
-     kubectl get pods --show-labels
+```bash
+kubectl get pods --show-labels
 ```
 Get pods and show labels attached to those pods.
 
-``` 
-     kubectl rollout status deployment/helloworld-deployment
+```bash
+kubectl rollout status deployment/helloworld-deployment
 ```
 Get deployment status.
 
 
-``` 
-     kubectl create -f k8s/deployment/helloworld.yml
-     kubectl get deployments
-     kubectl get rs
-     kubectl get pods
-     kubectl expose deployment helloworld-deployment --type=NodePort
-     kubectl get service
-     kubectl describe service helloworld-deployment
-     minikube service helloworld-deployment --url
-     kubectl set image k8s/deployment/helloworld-deployment k8s-demo=wardviaene/k8s-demo:2
-     kubectl rollout status k8s/deployment/helloworld-deployment
-     kubectl history k8s/deployment/helloworld-deployment
-     kubectl undo k8s/deployment/helloworld-deployment
+```bash
+kubectl create -f k8s/deployment/helloworld.yml
+kubectl get deployments
+kubectl get rs
+kubectl get pods
+kubectl expose deployment helloworld-deployment --type=NodePort
+kubectl get service
+kubectl describe service helloworld-deployment
+minikube service helloworld-deployment --url
+kubectl set image k8s/deployment/helloworld-deployment k8s-demo=wardviaene/k8s-demo:2
+kubectl rollout status k8s/deployment/helloworld-deployment
+kubectl history k8s/deployment/helloworld-deployment
+kubectl undo k8s/deployment/helloworld-deployment
 ```
 Example of deployment
 
@@ -300,14 +301,14 @@ Creating a service will create an endpoint for pods:
 - a NodePort: a port that is the same on each node ais also reachable externally
 - a LoadBalancer will route external trafiic to every node on the NodePort.
 
-``` 
-     kubectl create -f k8s/first-app/helloworld.yml
-     kubectl get pods
-     kubectl describe pod nodehelloworld.example.com 
-     kubectl create -f k8s/first-app/helloworld-nodeport-service.yml
-     minikube service helloworld-service --url
-     kubectl describe svc helloworld-service
-     kubectl delete svc helloworld-service
+```bash
+kubectl create -f k8s/first-app/helloworld.yml
+kubectl get pods
+kubectl describe pod nodehelloworld.example.com 
+kubectl create -f k8s/first-app/helloworld-nodeport-service.yml
+minikube service helloworld-service --url
+kubectl describe svc helloworld-service
+kubectl delete svc helloworld-service
 ```
 Example of Service, using static node port
 
@@ -319,14 +320,13 @@ Label can be used to tag nodes, once nodes are tagged, you can use label selecto
 First step, add a label or multiple labels to nodes.
 Secondly all pod that uses those labels.
 
-``` 
-    kubectl get nodes --show-labels
-    kubectl create -f k8s/deployment/helloworld-nodeselecotr.yml
-    kubectl get deployments
-    kubectl get pods
-    kubectl label nodes minikube hardware=high-spec
-    kubectl get nodes --show-labels
-
+```bash
+kubectl get nodes --show-labels
+kubectl create -f k8s/deployment/helloworld-nodeselecotr.yml
+kubectl get deployments
+kubectl get pods
+kubectl label nodes minikube hardware=high-spec
+kubectl get nodes --show-labels
 ```
 Example of lables
 
@@ -335,12 +335,11 @@ There are two different type of health check:
 - Running a command in the container periodically
 - Periodic check on a URL
 
-``` 
-    kubectl create -f k8s/deployment/helloworld-healthcheck.yml
-    kubectl get deployments
-    kubectl get pods
-    kubectl edit deployment/helloworld-deployment
-
+```bash
+kubectl create -f k8s/deployment/helloworld-healthcheck.yml
+kubectl get deployments
+kubectl get pods
+kubectl edit deployment/helloworld-deployment
 ```
 Example of Health checks
 
@@ -350,8 +349,8 @@ LivenessProbes indicate wheter container is running.
 If the check fail, the container will be restarted.
 ReadinessProbe indicateswhether the container is ready to serve requests.
 If the check fails the container will not be restarted, but the Pod's IP address will be removed ffom the service, so it'll not serve any requesty anymore.
-``` 
-     kubectl create -f k8s/deployment/helloworld-liveness-readiness.yml && watch -n1 kubectl get pods
+```bash
+kubectl create -f k8s/deployment/helloworld-liveness-readiness.yml && watch -n1 kubectl get pods
 ```
 
 ###### Pod state
@@ -370,8 +369,8 @@ State Failed
 State Unknown
 - The state of the pod couldn't be detemined
 - Eg. network problems
-``` 
-     kubectl pod <pod_name> -n kube-system
+```bash
+kubectl pod <pod_name> -n kube-system
 ```
 Get pod conditions.
 There are 5 different types of PodConditions:
@@ -381,8 +380,8 @@ There are 5 different types of PodConditions:
 - Unschedulable
 - ContainersReady
 There also container state
-``` 
-     kubectl get pod <pod_name> -n kube-system -o yaml
+```bash
+kubectl get pod <pod_name> -n kube-system -o yaml
 ```
 There are 3 different types of containers state:
 - Running
@@ -393,35 +392,34 @@ There are 3 different types of containers state:
 Secrets provides a way in Kubernetes to distribute credentials, keys, passwords, etc.
 Kubernetes itself uses this Secrets mechanism to provide the credentials to access the internal API.
 We can use as environmental variables, as file in pod. Can be used for dotenv files.
-``` 
-     echo -n "root > ./username
-     echo -n "password" > ./password
-     kubectl create secret generic db-user-pass --from-file=./username --from-file=./password
+```bash
+echo -n "root > ./username
+echo -n "password" > ./password
+kubectl create secret generic db-user-pass --from-file=./username --from-file=./password
 ```
 
 A secret can also be an SSH key or an SSL certificate.
 
-``` 
-     kubectl create -f k8s/deployment/helloworld-secrets.yml
-     kubectl create -f k8s/deployment/helloworld-secrets-volumes.yml
-     kubectl get pods
-     kubectl exec <pod_name> -i -t -- /bin/bash
-     cat /etc/creds/username
-
+```bash
+kubectl create -f k8s/deployment/helloworld-secrets.yml
+kubectl create -f k8s/deployment/helloworld-secrets-volumes.yml
+kubectl get pods
+kubectl exec <pod_name> -i -t -- /bin/bash
+cat /etc/creds/username
 ```
 Example of secrets
 
-``` 
-     kubectl create -f k8s/wordpress/wordpress-secrets.yml
-     kubectl create -f k8s/wordpress/wordpress-single-deployment-no-volumes.yml
-     kubectl create -f k8s/wordpress/wordpress-service.yml
-     minikube service wordpress-service --url
+```bash
+kubectl create -f k8s/wordpress/wordpress-secrets.yml
+kubectl create -f k8s/wordpress/wordpress-single-deployment-no-volumes.yml
+kubectl create -f k8s/wordpress/wordpress-service.yml
+minikube service wordpress-service --url
 ```
 Wordpress  example with no volumes
 
 
-``` 
-     minikube dashboard --url
+```bash
+minikube dashboard --url
 ```
 Show Kubernetes dashboard
 
@@ -434,14 +432,14 @@ A container in the same pod can connect the port of the other container directly
 To make DNS work, a pod will need a Service Definition.
 Default stands for the deafult namespace Pods and services can be launched in different namespaces - to logically separate cluster.
 
-``` 
-     kubectl create -f k8s/service-discovery/secrets.yml
-     kubectl create -f k8s/service-discovery/database.yml
-     kubectl create -f k8s/service-discovery/database-service.yml
-     kubectl create -f k8s/service-discovery/helloworld-db.yml
-     kubectl create -f k8s/service-discovery/helloworld-db-service.yml
-     minikube service helloworld-db-service --url
-     kubectl logs <deploymen_name>
+```bash
+kubectl create -f k8s/service-discovery/secrets.yml
+kubectl create -f k8s/service-discovery/database.yml
+kubectl create -f k8s/service-discovery/database-service.yml
+kubectl create -f k8s/service-discovery/helloworld-db.yml
+kubectl create -f k8s/service-discovery/helloworld-db-service.yml
+minikube service helloworld-db-service --url
+kubectl logs <deploymen_name>
 ```
 Example: Service Discovery
 
@@ -456,12 +454,12 @@ Using ConfigMap:
 - You can create a pod that exposes the configMap usin a volume
 - You can create a pod that exposesthe configMap as environment variables.
 
-``` 
-     kubectl create configmap nginx-config --fromfile=k8s/configmap/reverseproxy.conf
-     kubectl get configmap nginx-config -o yaml
-     kubectl create -f k8s/configmap/nginx.yml
-     kubectl create -f k8s/configmap/nginx-service.yml
-     kubectl service helloworld-nginx-service --url
+```bash
+kubectl create configmap nginx-config --fromfile=k8s/configmap/reverseproxy.conf
+kubectl get configmap nginx-config -o yaml
+kubectl create -f k8s/configmap/nginx.yml
+kubectl create -f k8s/configmap/nginx-service.yml
+kubectl service helloworld-nginx-service --url
 ```
 Example: ConfigMap
 
@@ -472,13 +470,13 @@ Ingress allows to easily expose services that need to be accessible form outsidd
 With ingress you can run own ingress controller (basically a loadbalancer) within the Kubernetes cluster.
 You can create ingress rules using the ingress object.
 
-``` 
-     kubectl create -f k8s/ingress/ingress.yml 
-     kubectl create -f k8s/ingress/nginx-ingress-controller.yml
-     kubectl create -f k8s/ingress/echoservice.yml 
-     kubectl create -f k8s/ingress/helloworld-v1.yml 
-     kubectl create -f k8s/ingress/helloworld-v2.yml 
-     kubectl get pod
+```bash
+kubectl create -f k8s/ingress/ingress.yml 
+kubectl create -f k8s/ingress/nginx-ingress-controller.yml
+kubectl create -f k8s/ingress/echoservice.yml 
+kubectl create -f k8s/ingress/helloworld-v1.yml 
+kubectl create -f k8s/ingress/helloworld-v2.yml 
+kubectl get pod
 ```
 Example of Ingress Controller
 
@@ -507,21 +505,21 @@ Can inject information into pods at runtime.
 Pod Presets are used to inject Kubernetes resources like Secrets, ConfigMaps, Volumes and environmental varibles.
 When injecting environment variables and volumemounts, the pod presets will apply the changes to all containers within the pod.
 
-``` 
-     kubectl create -f k8s/pod-presets/pod-presets.yml
-     kubectl get podpresets
-     kubectl create -f deployments.yml
+```bash
+kubectl create -f k8s/pod-presets/pod-presets.yml
+kubectl get podpresets
+kubectl create -f deployments.yml
 ```
 Example of  Presets
 
 ###### StatefulSets
 It's introduced to be able to run stateful applications.
 A StatefulSet will allow stateful app to use DNS to find other peers.
-``` 
-     kubectl create -f k8s/statefulset/cassandra.yaml
-     kubectl get pod
-     kubectl get pv
-     watch kubectl get pod
+```bash
+kubectl create -f k8s/statefulset/cassandra.yaml
+kubectl get pod
+kubectl get pv
+watch kubectl get pod
 ```
 
 
@@ -543,13 +541,13 @@ Kubernetes can automatically scale a Deployment, Replication Controller or repli
 In Kubernetes 1.3 scalling based on CPU usage is possile out of the box.
 Autoscaling will use heapster, the monitoring tool, to gather its metrics and make scaling decisions.
 
-``` 
-     kubectl create -f k8s/autoscaling/hpa-example.yml 
-     kubectl get hpa
-     kubectl run -i --tty load-generator --image=busybox /bin/sh
-     while true; do wget -q -0- <http>; done
-     kubectl get hpa
-     kubectl get pod
+```bash
+kubectl create -f k8s/autoscaling/hpa-example.yml 
+kubectl get hpa
+kubectl run -i --tty load-generator --image=busybox /bin/sh
+while true; do wget -q -0- <http>; done
+kubectl get hpa
+kubectl get pod
 
 ```
 Example of Autoscaling
@@ -577,17 +575,17 @@ Namespaces logically separates you cluster.
 The standard namespace is called default and that's where all resources are launched in by default.
 There is also namespace for kubernetes specific resources, called kube-system.
 We can also limit objects (secrets, services, configmaps).
-``` 
-     kubectl get namespaces
+```bash 
+kubectl get namespaces
 ```
 List namespaces
 
-``` 
-     kubectl create -f k8s/resourcequotas/resourcequota.yml
-     kubectl create -f k8s/resourcequotas/helloworld-no-quotas.yml
-     kubectl get deploy --namespace=myspace
-     kubectl describe rs/<deploy> --namespace=myspace
-     kubectl create -f k8s/resourcequotas/helloworld-with-quotas.yml
+```bash 
+kubectl create -f k8s/resourcequotas/resourcequota.yml
+kubectl create -f k8s/resourcequotas/helloworld-no-quotas.yml
+kubectl get deploy --namespace=myspace
+kubectl describe rs/<deploy> --namespace=myspace
+kubectl create -f k8s/resourcequotas/helloworld-with-quotas.yml
 ```
 Example of Namespaces
 
@@ -631,17 +629,17 @@ A single chart can deploy an app, a piece of software, or database.
 Chart uses tempaltes, that are typically developed by a package maintainer.
 Then will generate yaml files that  Kubernetes understands.
 Helm allows to do upgrades and rollbacks
-``` 
-     helm init 
-     helm install
-     helm search 
-     helm list
-     helm upgrade
-     helm rollback
+```bash
+helm init 
+helm install
+helm search 
+helm list
+helm upgrade
+helm rollback
 ```
 
-``` 
-     helm create mychart
+```bash
+helm create mychart
 ```
 will create Chart.yaml, values.yaml, templates/
 
@@ -663,51 +661,51 @@ You can install and use any of the projects to let developers functions on Kuber
 Kubeless is a Kubernetes native framerowk, it laverages the Kubernetes resources to provide auto-scaling, API routing, monitoring etc.
 It uses Custom Resource Definitions to be able to create functions.
 Once you deployed your function, you'll need to determine how it'll be triggered.
-``` 
-     wget https://github.com/kubeless/kubeless/releases/download/v1.0.4/kubeless_linux-amd64.zip
-    unzip kubeless_linux-amd64.zip
-    sudo mv bundles/kubeless_linux-amd64/kubeless /usr/local/bin
-    rm -r bundles/
-    kubectl create ns kubeless
-    kubectl create -f https://github.com/kubeless/kubeless/releases/download/v1.0.4/kubeless-v1.0.4.yaml
-    kubeless function deploy hello --runtime python2.7 \
-                               --from-file k8s/kubeless/python-example/example.py \
-                               --handler test.hello
-   kubeless function deploy myfunction --runtime nodejs6 \
-                                --dependencies node-example/package.json \
-                                --handler test.myfunction \
-                                --from-file k8s/kubeless/node-example/example.js
+```bash
+wget https://github.com/kubeless/kubeless/releases/download/v1.0.4/kubeless_linux-amd64.zip
+unzip kubeless_linux-amd64.zip
+sudo mv bundles/kubeless_linux-amd64/kubeless /usr/local/bin
+rm -r bundles/
+kubectl create ns kubeless
+kubectl create -f https://github.com/kubeless/kubeless/releases/download/v1.0.4/kubeless-v1.0.4.yaml
+kubeless function deploy hello --runtime python2.7 \
+                              --from-file k8s/kubeless/python-example/example.py \
+                              --handler test.hello
+kubeless function deploy myfunction --runtime nodejs6 \
+                              --dependencies node-example/package.json \
+                              --handler test.myfunction \
+                              --from-file k8s/kubeless/node-example/example.js
 
-    kubeless function ls
-    kubeless function call myfunction --data 'This is some data'
-    kubeless logs <pod_name>
+kubeless function ls
+kubeless function call myfunction --data 'This is some data'
+kubeless logs <pod_name>
 ```
 
-``` 
-     kubectl create -f nginx-ingress-controller-with-elb.yml
-    kubeless trigger http create myfunction --function-name myfunction --hostname myfunction.kubernetes.newtech.academy
-    kubectl get svc -n ingress-nginx -o wide
-    kubectl get ingresss
+```bash
+kubectl create -f nginx-ingress-controller-with-elb.yml
+kubeless trigger http create myfunction --function-name myfunction --hostname myfunction.kubernetes.newtech.academy
+kubectl get svc -n ingress-nginx -o wide
+kubectl get ingresss
 ```
 
 
 ###### Istio
-``` 
-     wget https://github.com/istio/istio/releases/download/1.2.4/istio-1.2.4-linux.tar.gz
-     tar xzf istio-1.2.4-linux.tar.gz
-     kubectl apply -f istio-1.2.4/install/kubernetes/hem/istio/templates/crds.yaml
-     kubectl get crds
-     kubectl apply -f istio-1.2.4/install/kubernetes/istio-demo.yaml
-     kubectl get pod -n isto-system
-     kubectl apply -f <(istioctl kube-inject -f k8s/istio/helloworld.yaml)
-     kubectl get pods
-     kubectl apply -f k8s/istio/helloworld-gw.yaml 
+```bash
+wget https://github.com/istio/istio/releases/download/1.2.4/istio-1.2.4-linux.tar.gz
+tar xzf istio-1.2.4-linux.tar.gz
+kubectl apply -f istio-1.2.4/install/kubernetes/hem/istio/templates/crds.yaml
+kubectl get crds
+kubectl apply -f istio-1.2.4/install/kubernetes/istio-demo.yaml
+kubectl get pod -n isto-system
+kubectl apply -f <(istioctl kube-inject -f k8s/istio/helloworld.yaml)
+kubectl get pods
+kubectl apply -f k8s/istio/helloworld-gw.yaml 
 ```
 Install Istio 1.2.4
 
 
 
-```
+```bash
 curl -L https://istio.io/downloadIstio | sh -
 cd istio-ABC
 for i in install/kubernetes/helm/istio-init/files/crd*yaml; do kubectl apply -f $i; done
@@ -740,14 +738,14 @@ Istio provides two types of authentication:
 ![Istio Glossary](/k8s/imgs/istioGlossary.png)
 
 
-``` 
+```bash
 istioctl verify-install
 kubectl  cluster-info
 ``` 
 Verify Istio installation
 
-
-```
+Demo #1
+```bash
 kubectl create namespace istio-demo
 kubectl label namespace istio-demo istio-injection=enabled
 # label the namespace so that the istio sidecar is working propery
@@ -759,26 +757,24 @@ kubectl apply -f k8s/istio/nginx/nginx-app-istio-gateway.yaml -n istio-demo
 # Deploy gateway for service; allow access nginx if request contains header Host: nginx-app.demo
 kubectl apply -f k8s/istio/nginx/nginx-app-istio-virtual-service.yaml -n istio-demo
 
+curl -H "Host: nginx-app.demo" <EXTERNAL-IP>
 ```
-Demo #1
-
-
-```
-kubectl label namespace default istio-injection=enabled
+Demo #2 Controlling Ingress Traffic
+```bash
+kubectl label namespace istio-demo istio-injection=enabled
 kubectl get svc istio-ingressgateway -n istio-system
 export INGRESS_HOST=$(kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
 echo $INGRESS_HOST
 cd k8s/istio/hello
-kubectl apply -f hello-istio.yaml 
-kubectl apply -f hello-istio-gateway.yaml 
-kubectl apply -f hello-istio-virtual-service.yaml
+kubectl apply -f hello-istio.yaml -n istio-demo
+kubectl apply -f hello-istio-gateway.yaml -n istio-demo
+kubectl apply -f hello-istio-virtual-service.yaml -n istio-demo
 kubectl get all
 watch -n 1 -d http get $INGRESS_HOST/api/hello Host:hello-istio.cloud
 ```
-Demo #2 Controlling Ingress Traffic
+Demo #3 Path Based Routing
 
-
-```
+```bash
 cd k8s/istio/hello
 kubectl apply -f hello-istio-destination.yaml
 # apply the version subsets as destinations
@@ -790,9 +786,9 @@ http get $INGRESS_HOST/api/hello Host:hello-istio.cloud
 http get $INGRESS_HOST/api/v1/hello Host:hello-istio.cloud
 http get $INGRESS_HOST/api/v2/hello Host:hello-istio.cloud
 ```
-Demo #3 Path Based Routing
+Demo #4 Header Based Routing
 
-```
+```bash
 cd k8s/istio/hello
 kubectl apply -f kubernetes/hello-istio-user-agent.yaml
 http get $INGRESS_HOST/api/hello User-Agent:Chrome Host:hello-istio.cloud
@@ -808,19 +804,21 @@ http get $INGRESS_HOST/api/hello Cookie:user=packtpub Host:hello-istio.cloud
 http get $INGRESS_HOST/api/hello Host:hello-istio.cloud
 # Reach v1
 ```
-Demo #4 Header Based Routing
 
-```
-cd k8s/istio/hello
-kubectl apply -f kubernetes/hello-istio-destination.yaml
-# apply the version subsets as destinations
-
-kubectl apply -f kubernetes/hello-istio-50-50.yaml
-http get $INGRESS_HOST/api/hello Host:hello-istio.cloud
-```
 Demo #5 Weight Based Routing
 
+```bash
+cd k8s/istio/hello
+kubectl apply -f hello-istio-destination.yaml
+# apply the version subsets as destinations
+
+kubectl apply -f hello-istio-50-50.yaml
+http get $INGRESS_HOST/api/hello Host:hello-istio.cloud
 ```
+
+Demo #6 Perform canary release deployment
+
+```bash
 cd k8s/istio/hello
 kubectl apply -f hello-istio-100-0.yaml
 kubectl apply -f hello-istio-75-25.yaml
@@ -828,12 +826,123 @@ kubectl apply -f hello-istio-50-50.yaml
 kubectl apply -f hello-istio-25-75.yaml
 kubectl apply -f hello-istio-0-100.yaml
 ```
-Demo #6 Perform canary release deployment
 
-```
-
-```
 Demo #7 Controlling Egress Traffic
+
+Istio has two Egress modes:
+1) ALLOW_ANY - default mode
+2) REGISTRY_ONLY - explicit trafiic controll
+
+```bash
+# get the current egress mode
+kubectl get configmap istio -n istio-system -o yaml | grep -o "mode: ALLOW_ANY"
+export SOURCE_POD=$(kubectl get pod -l app=hello-istio-console -o jsonpath={.items..metadata.name})
+kubectl exec -it $SOURCE_POD -c console /bin/sh
+wget -S -q https://www.google.com // this should work
+# disable ALLOW_ANY egress mode
+kubectl get configmap istio -n istio-system -o yaml | sed 's/mode: ALLOW_ANY/mode: REGISTRY_ONLY/g' | kubectl replace -n istio-system -f -
+# Right now pod is unable to connect to outside wold eg. google.com
+kubectl exec -it $SOURCE_POD -c console /bin/sh
+wget -S -q https://www.google.com // this should't work
+kubectl apply -f kubernetes/hello-istio-egress.yaml
+kubectl exec -it $SOURCE_POD -c console /bin/sh
+wget -S -q https://www.google.com // this should work
+```
+
+
+Service Resilience
+Circuit Breaker
+
+Demo #8 Setting Request Timeouts
+```bash
+kubectl apply -f timeout/hello-istio.yaml
+kubectl apply -f timeout/hello-istio-gateway.yaml
+kubectl apply -f timeout/hello-istio-virtual-service.yaml
+kubectl apply -f timeout/hello-istio-destination.yaml
+
+kubectl get all
+http get $INGRESS_HOST/api/hello Host:hello-istio.cloud sleep==3
+```
+
+Next, edit the virtual service definitions for `hello-istio` and the `hello-message` service to configure the timeouts.
+
+```yaml
+    # configure a 2s timeout
+    timeout: 2s
+```
+
+Issue the following commands to apply and see the timeouts in action.
+```bash
+kubectl apply -f timeout/hello-istio-virtual-service.yaml
+kubectl apply -f timeout/hello-message-virtual-service.yaml
+http get $INGRESS_HOST/api/hello Host:hello-istio.cloud sleep==3
+http get $INGRESS_HOST/api/hello Host:hello-istio.cloud sleep==1
+```
+Demo #9 Connection Pools
+```bash
+kubectl apply -f connectionpools/hello-istio.yaml
+kubectl apply -f connectionpools/hello-istio-gateway.yaml
+kubectl apply -f connectionpools/hello-istio-virtual-service.yaml
+kubectl apply -f connectionpools/hello-istio-destination.yaml
+kubectl apply -f connectionpools/hello-message-virtual-service.yaml
+kubectl apply -f connectionpools/hello-message-destination.yaml
+
+
+kubectl get all
+http get $INGRESS_HOST/api/hello Host:hello-istio.cloud
+```
+Next, edit the destination rule definitions for hello-istio and hello-message to configure the connection pools and bulk heads.
+```yaml
+  trafficPolicy:
+    connectionPool:
+      tcp:
+        maxConnections: 100             # maximum number of TCP conns
+        connectTimeout: 5s              # TCP connection timeout
+        tcpKeepalive:                   # keep alive settings
+          time: 3600s
+          interval: 60s
+      http:
+        maxRequestsPerConnection: 25    # max request per keep-alive
+        http2MaxRequests: 5             # max number of HTTP2 conns
+        http1MaxPendingRequests: 5      # max number of pending reqs
+        maxRetries: 3                   # max number of retries
+        idleTimeout: 60s                # idle timeout for connection
+```
+Now apply the modified destination rule definitions for the two services.
+
+```bash
+kubectl apply -f connectionpools/hello-istio-connection-pool.yaml
+kubectl apply -f connectionpools/hello-message-connection-pool.yaml
+http get $INGRESS_HOST/api/hello Host:hello-istio.cloud
+```
+Demo #10 Retries
+```bash
+kubectl apply -f retries/hello-istio.yaml
+kubectl apply -f retries/hello-istio-gateway.yaml
+kubectl apply -f retries/hello-istio-virtual-service.yaml
+kubectl apply -f retries/hello-istio-destination.yaml
+kubectl apply -f retries/hello-message-virtual-service.yaml
+kubectl apply -f retries/hello-message-destination.yaml
+
+kubectl get all
+http get $INGRESS_HOST/api/hello Host:hello-istio.cloud
+```
+
+Next, edit the virtual service definitions for `hello-istio` and  `hello-message` to configure the retry behaviour.
+
+```yaml
+    retries:
+      attempts: 3
+      perTryTimeout: 500ms
+      retryOn: gateway-error,connect-failure,refused-stream
+```
+
+Now apply the modified destination rule definitions for the two services.
+
+```bash
+kubectl apply -f retries/hello-istio-retries.yaml
+kubectl apply -f retries/hello-message-retries.yaml
+```
 
 
 ###### Kops (Kubernetes Operations)
