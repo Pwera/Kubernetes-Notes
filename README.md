@@ -744,7 +744,7 @@ kubectl  cluster-info
 ``` 
 Verify Istio installation
 
-Demo #1
+###### Demo #1
 ```bash
 kubectl create namespace istio-demo
 kubectl label namespace istio-demo istio-injection=enabled
@@ -759,7 +759,7 @@ kubectl apply -f k8s/istio/nginx/nginx-app-istio-virtual-service.yaml -n istio-d
 
 curl -H "Host: nginx-app.demo" <EXTERNAL-IP>
 ```
-Demo #2 Controlling Ingress Traffic
+###### Demo #2 Controlling Ingress Traffic
 ```bash
 kubectl label namespace istio-demo istio-injection=enabled
 kubectl get svc istio-ingressgateway -n istio-system
@@ -772,7 +772,7 @@ kubectl apply -f hello-istio-virtual-service.yaml -n istio-demo
 kubectl get all
 watch -n 1 -d http get $INGRESS_HOST/api/hello Host:hello-istio.cloud
 ```
-Demo #3 Path Based Routing
+###### Demo #3 Path Based Routing
 
 ```bash
 cd k8s/istio/hello
@@ -786,7 +786,7 @@ http get $INGRESS_HOST/api/hello Host:hello-istio.cloud
 http get $INGRESS_HOST/api/v1/hello Host:hello-istio.cloud
 http get $INGRESS_HOST/api/v2/hello Host:hello-istio.cloud
 ```
-Demo #4 Header Based Routing
+###### Demo #4 Header Based Routing
 
 ```bash
 cd k8s/istio/hello
@@ -805,7 +805,7 @@ http get $INGRESS_HOST/api/hello Host:hello-istio.cloud
 # Reach v1
 ```
 
-Demo #5 Weight Based Routing
+###### Demo #5 Weight Based Routing
 
 ```bash
 cd k8s/istio/hello
@@ -816,7 +816,7 @@ kubectl apply -f hello-istio-50-50.yaml
 http get $INGRESS_HOST/api/hello Host:hello-istio.cloud
 ```
 
-Demo #6 Perform canary release deployment
+###### Demo #6 Perform canary release deployment
 
 ```bash
 cd k8s/istio/hello
@@ -827,7 +827,7 @@ kubectl apply -f hello-istio-25-75.yaml
 kubectl apply -f hello-istio-0-100.yaml
 ```
 
-Demo #7 Controlling Egress Traffic
+###### Demo #7 Controlling Egress Traffic
 
 Istio has two Egress modes:
 1) ALLOW_ANY - default mode
@@ -853,12 +853,13 @@ wget -S -q https://www.google.com // this should work
 Service Resilience
 Circuit Breaker
 
-Demo #8 Setting Request Timeouts
+###### Demo #8 Setting Request Timeouts
 ```bash
-kubectl apply -f timeout/hello-istio.yaml
-kubectl apply -f timeout/hello-istio-gateway.yaml
-kubectl apply -f timeout/hello-istio-virtual-service.yaml
-kubectl apply -f timeout/hello-istio-destination.yaml
+cd timeout
+kubectl apply -f hello-istio.yaml
+kubectl apply -f hello-istio-gateway.yaml
+kubectl apply -f hello-istio-virtual-service.yaml
+kubectl apply -f hello-istio-destination.yaml
 
 kubectl get all
 http get $INGRESS_HOST/api/hello Host:hello-istio.cloud sleep==3
@@ -873,19 +874,20 @@ Next, edit the virtual service definitions for `hello-istio` and the `hello-mess
 
 Issue the following commands to apply and see the timeouts in action.
 ```bash
-kubectl apply -f timeout/hello-istio-virtual-service.yaml
-kubectl apply -f timeout/hello-message-virtual-service.yaml
+kubectl apply -f hello-istio-virtual-service.yaml
+kubectl apply -f hello-message-virtual-service.yaml
 http get $INGRESS_HOST/api/hello Host:hello-istio.cloud sleep==3
 http get $INGRESS_HOST/api/hello Host:hello-istio.cloud sleep==1
 ```
-Demo #9 Connection Pools
+###### Demo #9 Connection Pools
 ```bash
-kubectl apply -f connectionpools/hello-istio.yaml
-kubectl apply -f connectionpools/hello-istio-gateway.yaml
-kubectl apply -f connectionpools/hello-istio-virtual-service.yaml
-kubectl apply -f connectionpools/hello-istio-destination.yaml
-kubectl apply -f connectionpools/hello-message-virtual-service.yaml
-kubectl apply -f connectionpools/hello-message-destination.yaml
+cd connectionpools
+kubectl apply -f hello-istio.yaml
+kubectl apply -f hello-istio-gateway.yaml
+kubectl apply -f hello-istio-virtual-service.yaml
+kubectl apply -f hello-istio-destination.yaml
+kubectl apply -f hello-message-virtual-service.yaml
+kubectl apply -f hello-message-destination.yaml
 
 
 kubectl get all
@@ -911,18 +913,19 @@ Next, edit the destination rule definitions for hello-istio and hello-message to
 Now apply the modified destination rule definitions for the two services.
 
 ```bash
-kubectl apply -f connectionpools/hello-istio-connection-pool.yaml
-kubectl apply -f connectionpools/hello-message-connection-pool.yaml
+kubectl apply -f hello-istio-connection-pool.yaml
+kubectl apply -f hello-message-connection-pool.yaml
 http get $INGRESS_HOST/api/hello Host:hello-istio.cloud
 ```
-Demo #10 Retries
+###### Demo #10 Retries
 ```bash
-kubectl apply -f retries/hello-istio.yaml
-kubectl apply -f retries/hello-istio-gateway.yaml
-kubectl apply -f retries/hello-istio-virtual-service.yaml
-kubectl apply -f retries/hello-istio-destination.yaml
-kubectl apply -f retries/hello-message-virtual-service.yaml
-kubectl apply -f retries/hello-message-destination.yaml
+cd retries
+kubectl apply -f hello-istio.yaml
+kubectl apply -f hello-istio-gateway.yaml
+kubectl apply -f hello-istio-virtual-service.yaml
+kubectl apply -f hello-istio-destination.yaml
+kubectl apply -f hello-message-virtual-service.yaml
+kubectl apply -f hello-message-destination.yaml
 
 kubectl get all
 http get $INGRESS_HOST/api/hello Host:hello-istio.cloud
@@ -940,10 +943,201 @@ Next, edit the virtual service definitions for `hello-istio` and  `hello-message
 Now apply the modified destination rule definitions for the two services.
 
 ```bash
-kubectl apply -f retries/hello-istio-retries.yaml
-kubectl apply -f retries/hello-message-retries.yaml
+kubectl apply -f hello-istio-retries.yaml
+kubectl apply -f hello-message-retries.yaml
 ```
 
+###### Demo #11 Injecting HTTP Delay Fault
+
+```bash
+cd injectingHTTPDelayFault
+kubectl apply -f hello-istio.yaml
+kubectl apply -f hello-istio-gateway.yaml
+kubectl apply -f hello-istio-v1.yaml
+kubectl apply -f hello-istio-destination.yaml
+kubectl apply -f hello-message-virtual-service.yaml
+kubectl apply -f hello-message-destination.yaml
+```
+
+First, make sure everything is running correctly without delays.
+```bash
+kubectl get all
+http get $INGRESS_HOST/api/hello Host:hello-istio.cloud
+```
+
+Next, configure a HTTP delay fault for any traffic to the hello-message v1 virtual service.
+
+```yaml
+- fault:
+    delay:
+      percentage:
+        value: 100.0
+      fixedDelay: 5s
+  # optionally add header match here
+  route:
+  - destination:
+      host: hello-message
+      subset: v1
+```
+
+Apply the modified virtual service and check that the HTTP delay is configured correctly.
+
+```bash
+kubectl apply -f hello-message-v1-delay.yaml
+
+# you should see an error message after 3s delay -> timeout working
+http get $INGRESS_HOST/api/hello Host:hello-istio.cloud
+```
+
+
+###### Demo #12 Injecting HTTP Abort Fault
+```bash
+cd injectingHTTPAbortFault
+kubectl apply -f hello-istio.yaml
+kubectl apply -f hello-istio-gateway.yaml
+kubectl apply -f hello-istio-v1.yaml
+kubectl apply -f hello-istio-destination.yaml
+kubectl apply -f hello-message-virtual-service.yaml
+kubectl apply -f hello-message-destination.yaml
+```
+
+First, make sure everything is running correctly without any faults.
+```bash
+kubectl get all
+http get $INGRESS_HOST/api/hello Host:hello-istio.cloud
+```
+
+Next, configure a HTTP abort fault for any traffic to the hello-message v1 virtual service.
+
+```yaml
+- fault:
+    abort:
+      httpStatus: 500
+      percentage:
+        value: 100.0
+  # optionally add header match here
+  route:
+  - destination:
+      host: hello-message
+      subset: v1
+```
+
+Apply the modified virtual service and check that the HTTP abort fault is configured correctly.
+
+```bash
+kubectl apply -f hello-message-v1-abort.yaml
+
+# you should see an error message about the abort filter
+http get $INGRESS_HOST/api/hello Host:hello-istio.cloud
+```
+
+###### Demo 13 Envoy Filters
+```bash
+cd envoyFilters
+kubectl apply -f hello-istio.yaml
+kubectl apply -f hello-istio-gateway.yaml
+kubectl apply -f hello-istio-v1.yaml
+kubectl apply -f hello-istio-destination.yaml
+
+kubectl apply -f hello-message-virtual-service.yaml
+kubectl apply -f hello-message-destination.yaml
+```
+
+First, make sure everything is running correctly.
+
+```
+kubectl get all
+http get $INGRESS_HOST/api/hello Host:hello-istio.cloud
+
+# check the container logs of the hello-message v1 pod
+kubectl logs hello-message-v1-6dcc4fff9-hnbxs -c hello-message
+```
+
+Apply the prepared envoy filter manifest and check that everything is working as expected. It does take a while for the sidecar to pick up the new filter configuration.
+
+```yaml
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: hello-message-lua
+spec:
+  workloadSelector:
+    labels:
+      app: hello-message
+  configPatches:
+    # adds the lua filter to the listener/http connection manager
+    # see https://istio.io/docs/reference/config/networking/envoy-filter/
+    # see https://www.envoyproxy.io/docs/envoy/latest/configuration/http/http_filters/lua_filter#
+  - applyTo: HTTP_FILTER
+    match:
+      context: SIDECAR_INBOUND
+      listener:
+        filterChain:
+          filter:
+            name: "envoy.http_connection_manager"
+            subFilter:
+              name: "envoy.router"
+    patch:
+      operation: INSERT_BEFORE
+      value:
+       name: envoy.lua
+       config:
+         inlineCode: |
+           function envoy_on_request(request_handle)
+             -- send back static response and do not continue
+             request_handle:respond({[":status"] = "200"}, "Envoy Filtered Message")
+           end
+
+           function envoy_on_response(request_handle)
+             -- add response specific logic here
+           end
+```
+
+```
+kubectl apply -f kubernetes/hello-message-v1-filter.yaml
+watch -n 1 -d http get $INGRESS_HOST/api/hello Host:hello-istio.cloud
+kubectl logs hello-message-v1-6dcc4fff9-hnbxs -c hello-message
+```
+
+###### Demo 14 Traffic Mirroring
+```bash
+cd trafficMirroring
+kubectl apply -f hello-istio.yaml
+kubectl apply -f hello-istio-gateway.yaml
+kubectl apply -f hello-istio-v1.yaml
+kubectl apply -f hello-istio-destination.yaml
+
+kubectl apply -f hello-message-virtual-service.yaml
+kubectl apply -f hello-message-destination.yaml
+```
+First, make sure everything is running correctly.
+```bash
+kubectl get all
+http get $INGRESS_HOST/api/hello Host:hello-istio.cloud
+
+# check the container logs of the hello-message pod
+kubectl logs hello-message-v2-6dcc4fff9-hnbxs -c hello-message
+```
+
+Next, configure traffic mirroring for the hello-message v2 virtual service.
+
+```yaml
+  mirror:
+    host: hello-message
+    subset: v2
+  mirror_percent: 100
+```
+
+Apply the changes to the virtual service, invoke the service and finally check the container logs.
+
+```bash
+kubectl apply -f kubernetes/hello-message-v2-mirroring.yaml
+
+http get $INGRESS_HOST/api/hello Host:hello-istio.cloud
+http get $INGRESS_HOST/api/hello Host:hello-istio.cloud
+
+kubectl logs hello-message-v2-6dcc4fff9-hnbxs -c hello-message
+```
 
 ###### Kops (Kubernetes Operations)
 Tool used to spin up a highly available production cluster.
