@@ -1131,13 +1131,204 @@ Next, configure traffic mirroring for the hello-message v2 virtual service.
 Apply the changes to the virtual service, invoke the service and finally check the container logs.
 
 ```bash
-kubectl apply -f kubernetes/hello-message-v2-mirroring.yaml
+kubectl apply -f hello-message-v2-mirroring.yaml
 
 http get $INGRESS_HOST/api/hello Host:hello-istio.cloud
 http get $INGRESS_HOST/api/hello Host:hello-istio.cloud
 
 kubectl logs hello-message-v2-6dcc4fff9-hnbxs -c hello-message
 ```
+
+###### Demo 15 Mutual TLS between services
+
+Make sure you have installed the `demo` profile for Istio.
+
+```bash
+cd mtls
+istioctl manifest apply --set profile=demo
+
+kubectl get svc istio-ingressgateway -n istio-system
+```
+
+We will be using two different namespaces to demonstrate the security mTLS features.
+
+```bash
+kubectl create namespace hello-istio
+kubectl label namespace hello-istio istio-injection=enabled
+
+# The default namespace will not have the sidecar injection
+kubectl label namespace default istio-injection=disabled
+```
+
+Next, we will apply the demo set of microservices. Per default, the mTLS between services is in PERMISSIVE mode, meaning that encrypted and unencrypted traffic is allowed in the service mesh.
+
+```bash
+kubectl apply -f demo/
+
+kubectl apply -f hello-istio-secure.yaml
+kubectl apply -f hello-istio-insecure.yaml
+
+kubectl get all -n hello-istio
+kubectl get all -n default
+```
+
+First, we check that we can call a service from the secure namespace and console pod:
+```bash
+kubectl exec -n hello-istio -c console -it hello-istio-secure-..... /bin/sh
+
+wget hello-istio:8080/api/hello -S -O - | more
+wget hello-istio.hello-istio.svc.cluster.local:8080/api/hello -S -O - | more
+```
+
+Next, we check that we can also call the service from an insecure namespace and console pod:
+```bash
+kubectl exec -it hello-istio-insecure-6969cf44bf-..... /bin/sh
+
+wget hello-istio.hello-istio.svc.cluster.local:8080/api/hello -S -O - | more
+```
+
+###### Demo 15 Authorization on Ingress Gateway
+
+```bash
+cd authorizationOnIngressGateway
+kubectl create namespace hello-istio
+kubectl label namespace hello-istio istio-injection=enabled
+
+kubectl apply -f demo/
+kubectl get all -n hello-istio
+
+kubectl get svc istio-ingressgateway -n istio-system
+export INGRESS_HOST=$(kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+```
+
+First, make sure that you can call the services without any applied `AuthorizationPolicy` and
+that you have configured to the gateway to forward source IP addresses.
+
+```bash
+http get $INGRESS_HOST/api/hello Host:hello-istio.cloud
+
+kubectl patch svc istio-ingressgateway -n istio-system -p '{"spec":{"externalTrafficPolicy":"Local"}}'
+```
+
+Next, find out your client IP address and issue the following commands to `DENY` or `ALLOW` any traffic entering the ingress gateway from your IP.
+
+```bash
+curl -s 'https://api.ipify.org?format=json'
+export CLIENT_IP=$(curl -s 'https://api.ipify.org?format=text')
+
+sed "s/<<CLIENT_IP>>/$CLIENT_IP/" hello-istio-gateway-policy-deny.yaml | kubectl apply -f -
+http get $INGRESS_HOST/api/hello Host:hello-istio.cloud
+
+sed "s/<<CLIENT_IP>>/$CLIENT_IP/" hello-istio-gateway-policy-allow.yaml | kubectl apply -f -
+http get $INGRESS_HOST/api/hello Host:hello-istio.cloud
+
+# do some cleanup
+kubectl delete AuthorizationPolicy -n istio-system --all
+```
+
+###### Demo 16 Authorization for HTTP Traffic
+```bash
+cd authorizationForHTTPTraffic
+kubectl create namespace hello-istio
+kubectl label namespace hello-istio istio-injection=enabled
+
+kubectl apply -f demo/
+
+kubectl apply -f hello-istio-secure.yaml
+kubectl apply -f hello-istio-insecure.yaml
+
+kubectl get svc istio-ingressgateway -n istio-system
+export INGRESS_HOST=$(kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+```
+
+Any HTTP traffic inside the service mesh can be enabled to disabled using an `AuthorizationPolicy`.
+
+```yaml
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: hello-message-http-policy
+  namespace: hello-istio
+spec:
+  selector:
+    matchLabels:
+      app: hello-message
+  # toggle between DENY and ALLOW
+  action: DENY
+  rules:
+  - to:
+      - operation:
+          methods: ["GET"]
+    from:
+      - source:
+          namespaces:
+            - "hello-istio"
+```
+
+Apply the above policy and check that the HTTP communication within the `hello-istio` namespace is not possible anymore but it is possible from outside the namespace.
+
+```bash
+http get $INGRESS_HOST/api/hello Host:hello-istio.cloud
+kubectl apply -f hello-message-http-policy.yaml
+http get $INGRESS_HOST/api/hello Host:hello-istio.cloud
+
+kubectl exec -it hello-istio-insecure-6969cf44bf-.... /bin/sh
+wget hello-message.hello-istio.svc.cluster.local:8080/api/message/hello -S -O - | more
+
+# do some cleanup
+kubectl delete AuthorizationPolicy -n hello-istio --all
+```
+
+###### Demo 17 Authorization with JWT
+```bash
+cd authorizationWithJWT
+kubectl create namespace hello-istio
+kubectl label namespace hello-istio istio-injection=enabled
+
+kubectl apply -f demo/
+
+kubectl apply -f hello-istio-secure.yaml
+kubectl apply -f hello-istio-insecure.yaml
+
+kubectl get svc istio-ingressgateway -n istio-system
+export INGRESS_HOST=$(kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+```
+
+Optionally, if you want to experiment with your own JWT and JWKS then follow these instructions to create your own credentials.
+
+```bash
+cd data/
+
+# download the JWT generator from the Istio repository
+$ wget https://raw.githubusercontent.com/istio/istio/release-1.5/security/tools/jwt/samples/gen-jwt.py
+
+# (optionally) create your own key
+openssl genrsa -out key.pem 2048
+
+# generate a new JWKS and JWT data set
+pip3 install jwcrypto
+python3 gen-jwt.py key.pem --iss packtpub --sub demo --aud students --jwks=./jwks.json --expire=3153600000 --claims=publisher:packtpub > packtpub.jwt
+```
+
+Here, we will apply the JWT authentication and authorization policies to the Istio service mesh. Without the policies, everything should work as expected. Once we have applied the policies, all requests without a JWT are denied with a `403 Forbidden`. Only requests with the correct JWT bearer token are accepted.
+
+```bash
+# every call works
+http get $INGRESS_HOST/api/hello Host:hello-istio.cloud
+
+# all requests without JWT are denied with 403
+kubectl apply -f hello-istio-jwt-authz.yaml
+http get $INGRESS_HOST/api/hello Host:hello-istio.cloud
+
+# prepare the JWT Bearer token
+export BEARER_TOKEN="Bearer $(cat data/packtpub.jwt)"
+echo $BEARER_TOKEN
+
+# a request with correct JWT bearer token is accepted
+http get $INGRESS_HOST/api/hello Host:hello-istio.cloud Authorization:$BEARER_TOKEN
+```
+
+
 
 ###### Kops (Kubernetes Operations)
 Tool used to spin up a highly available production cluster.
