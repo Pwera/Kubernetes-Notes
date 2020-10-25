@@ -24,6 +24,9 @@ So whenever a new pod is launched the kube-proxy is going to change the Iptables
 
 ## Kubernetes Setup
 
+###### k3s
+// TODO
+
 ###### Minikube
 Minikube is a tool that makes it easy to run Kubernetes locally.
 Minikube runs a single-node Kubernetes cluster inside a Linux VM.
@@ -64,6 +67,10 @@ Stop Minikube
 ###### Pod  
 Pod describes an application running on Kubernetes. 
 Can container on or more containers.
+Each pod is given an unique IP address.
+Containers in a pod can spean to each other on localhost.
+They share the same network, storage, process space.
+
 ```yaml
 apiVersion: v1
 kind: Pod
@@ -216,6 +223,10 @@ kubectl scale --replicas=4 -f k8s/replication-controller/helloworld-repl-control
 kubectl get pods
 ```
 
+```bash
+kubectl rollout status deploy/nginx
+```
+
 ###### Deployments
 
 ![Kubernetes Glossary](/k8s/imgs/kubernetesGlossary.png)
@@ -230,6 +241,33 @@ With deployment object you can:
 - Do rolling updates (zero downtime deplyments)
 - Rollback
 - Pause/ Resume
+Deployment creates Replica Set, Replica Set creates Pods.
+One key feature that Deployments provide that ReplicaSets do not provide is rolling updates.
+
+A ReplicaSet can only define a single Pod template; if you want to roll out a new version
+of your application, you need to create a new Deployment that defines this Pod template.
+
+Imperative commands enable users to quickly create, update, and delete Kubernetes objects.
+Imperative commands are easiest to learn and therefore present the lowest barrier to entry.
+For example, to create a Pod that runs a specific container—in this case, "nginx"–, you
+can simply run the “kubectl run nginx --image nginx” command.
+This command is simple to write and understand because it only contains a name and the image
+that should be run as a container.
+However, it doesn’t provide an audit trail, which is important in clusters so that operators
+can know what changes are made.
+It's also not very flexible: the options are limited, and additional commands must be run
+to expose the Deployment as an externally available service.
+
+kubernetes deployment object is suitable for stateless application.
+Deployments are more rebust and provide additional objects.
+However, a minimalist Deployment can look exactly like a ReplicaSet.
+
+```yaml
+kubectl create deploy  nginx --image=nginx:1.16-alpine
+kubectl delete deploy/nginx
+kubectl set image deploy/nginx nginx=nginx:1.17-alpine
+```
+
 ```yaml
 apiVersion: extensions/v1beta1
 kind: Deployment
@@ -290,13 +328,14 @@ Example of deployment
 
 ###### Services
 
+Defines a DNS entry that can be used to refer to a group of pods.
 Pods are very dynamic, they come and go  on the Kubernetes cluster.
 When using a Replication Controller, pods are terminated and created during scalling operations.
 When using Deployments, when updating the image verson, pods are terminated and new pods take the place of older pods.
 Pods should neber be accessed directly, but always through a Service.
 A service is th logical bridge between the "mortal" pods and other service or end-user.
 When using "kubectl expose" command, you created a new service for Pods, so it could be accessed externally.
-Creating a service will create an endpoint for pods:
+Creating a service will create an endpoint(!) for pods:
 - a CluserIP: a virtual IP address only reachable from within the cluster (default)
 - a NodePort: a port that is the same on each node ais also reachable externally
 - a LoadBalancer will route external trafiic to every node on the NodePort.
@@ -445,11 +484,11 @@ Example: Service Discovery
 
 ######  ConfigMap
 Configuration parameters that are not secret, can be put in a ConfigMap.
-The ConfigMap key-value pairs can then be read by the app uaing:
+The ConfigMap key-value pairs can then be read by the app using:
 - Environmental variables
 - Container commandline arguments in the Pod configuration
 - Using volumes
-ConfigMap can also containe full configuration files.
+ConfigMap can also contain full configuration files.
 Using ConfigMap:
 - You can create a pod that exposes the configMap usin a volume
 - You can create a pod that exposesthe configMap as environment variables.
@@ -464,6 +503,8 @@ kubectl service helloworld-nginx-service --url
 Example: ConfigMap
 
 ######  Ingress
+
+Route traffic to internal  services based on host and path.
 Ingress is a solution available since Kubernetes 1.1 that allows inbound connections to the cluster. 
 It's alternative to the external LoadBalancer and nodePorts
 Ingress allows to easily expose services that need to be accessible form outsidde to the cluster.
@@ -1328,6 +1369,112 @@ echo $BEARER_TOKEN
 http get $INGRESS_HOST/api/hello Host:hello-istio.cloud Authorization:$BEARER_TOKEN
 ```
 
+###### Kustomize
+Kustomize lets you customize raw, template-free YAML files for multiple purposes, leaving the original YAML untouched and usable as is.
+In order to use Kustomize we have to use '-k' flag.
+```bash
+cd k8s/kustomize/base
+kubectl apply -k .
+```
+
+```bash
+NAME                         READY   STATUS    RESTARTS   AGE
+pod/nginx-7cf5c7ddb5-f84zf   1/1     Running   0          10s
+
+NAME                 TYPE        CLUSTER-IP    EXTERNAL-IP   PORT(S)        AGE
+service/kubernetes   ClusterIP   10.43.0.1     <none>        443/TCP        123m
+service/nginx        NodePort    10.43.55.21   <none>        80:30523/TCP   10s
+
+NAME                    READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/nginx   1/1     1            1           10s
+```
+
+```bash
+cd ../overlay/staging
+kubectl apply -k .
+```
+
+```bash
+NAME                                READY   STATUS    RESTARTS   AGE
+pod/nginx-7cf5c7ddb5-f84zf          1/1     Running   0          5m1s
+pod/staging-nginx-f4b4bbfc8-khwfm   1/1     Running   0          6s
+
+NAME                    TYPE        CLUSTER-IP    EXTERNAL-IP   PORT(S)        AGE
+service/kubernetes      ClusterIP   10.43.0.1     <none>        443/TCP        128m
+service/nginx           NodePort    10.43.55.21   <none>        80:30523/TCP   5m1s
+service/staging-nginx   NodePort    10.43.94.38   <none>        80:31543/TCP   6s
+
+NAME                            READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/nginx           1/1     1            1           5m1s
+deployment.apps/staging-nginx   1/1     1            1           6s
+
+NAME                                      DESIRED   CURRENT   READY   AGE
+replicaset.apps/nginx-7cf5c7ddb5          1         1         1       5m1s
+replicaset.apps/staging-nginx-f4b4bbfc8   1         1         1       6s
+```
+```bash
+cd ../production
+kubectl apply -k .
+```
+
+```bash
+NAME                                READY   STATUS    RESTARTS   AGE
+pod/nginx-7cf5c7ddb5-f84zf          1/1     Running   0          6m34s
+pod/staging-nginx-f4b4bbfc8-khwfm   1/1     Running   0          99s
+pod/prod-nginx-59b47887cb-xm6d8     1/1     Running   0          24s
+pod/prod-nginx-59b47887cb-nx7pq     1/1     Running   0          24s
+pod/prod-nginx-59b47887cb-552jt     1/1     Running   0          24s
+
+NAME                    TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)        AGE
+service/kubernetes      ClusterIP   10.43.0.1      <none>        443/TCP        129m
+service/nginx           NodePort    10.43.55.21    <none>        80:30523/TCP   6m34s
+service/staging-nginx   NodePort    10.43.94.38    <none>        80:31543/TCP   99s
+service/prod-nginx      NodePort    10.43.70.232   <none>        80:30339/TCP   25s
+
+NAME                            READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/nginx           1/1     1            1           6m34s
+deployment.apps/staging-nginx   1/1     1            1           99s
+deployment.apps/prod-nginx      3/3     3            3           25s
+
+NAME                                      DESIRED   CURRENT   READY   AGE
+replicaset.apps/nginx-7cf5c7ddb5          1         1         1       6m34s
+replicaset.apps/staging-nginx-f4b4bbfc8   1         1         1       99s
+replicaset.apps/prod-nginx-59b47887cb     3         3         3       25s
+```
+
+```bash
+cd ../ingress/single
+kubectl apply -k .
+```
+
+```bash
+NAME                                READY   STATUS    RESTARTS   AGE
+pod/nginx-7cf5c7ddb5-f84zf          1/1     Running   0          58m
+pod/staging-nginx-f4b4bbfc8-khwfm   1/1     Running   0          53m
+pod/prod-nginx-59b47887cb-xm6d8     1/1     Running   0          52m
+pod/prod-nginx-59b47887cb-nx7pq     1/1     Running   0          52m
+pod/prod-nginx-59b47887cb-552jt     1/1     Running   0          52m
+pod/dev-nginx-6cc6b9f788-sq9z4      1/1     Running   0          5s
+
+NAME                    TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)        AGE
+service/kubernetes      ClusterIP   10.43.0.1       <none>        443/TCP        3h1m
+service/nginx           NodePort    10.43.55.21     <none>        80:30523/TCP   58m
+service/staging-nginx   NodePort    10.43.94.38     <none>        80:31543/TCP   53m
+service/prod-nginx      NodePort    10.43.70.232    <none>        80:30339/TCP   52m
+service/dev-nginx       ClusterIP   10.43.138.192   <none>        80/TCP         5s
+
+NAME                            READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/nginx           1/1     1            1           58m
+deployment.apps/staging-nginx   1/1     1            1           53m
+deployment.apps/prod-nginx      3/3     3            3           52m
+deployment.apps/dev-nginx       1/1     1            1           5s
+
+NAME                                      DESIRED   CURRENT   READY   AGE
+replicaset.apps/nginx-7cf5c7ddb5          1         1         1       58m
+replicaset.apps/staging-nginx-f4b4bbfc8   1         1         1       53m
+replicaset.apps/prod-nginx-59b47887cb     3         3         3       52m
+replicaset.apps/dev-nginx-6cc6b9f788      1         1         1       5s
+```
 
 
 ###### Kops (Kubernetes Operations)
