@@ -1,23 +1,9 @@
 # Kubernetes
-Kubernetes is and open source orchestration system for containers.
+<i>Kubernetes</i> is and open source orchestration system for containers. It lets you schedule containers on a cluster of machines. Kubernetes can run multiple contianers on one machine. Kubernetes will manage the state of these containers. Can start the contaienr on specific nodes. Will restart container when it gets killed. Can move containers from one node to another node. Containers inside same pod can communicate with localhost.
 
-It lets you schedule containers on a cluster of machines.
+<i>Kubelets</i> are responsible to launch the pods. It's going to connect to the master node to get this information.
 
-Kubernetes can run multiple contianers on one machine.
-
-Kubernetes will manage the state of these containers.
-
-Can start the contaienr on specific nodes.
-
-Will restart container when it gets killed.
-
-Can move containers from one node to another node.
-
-Containers inside same pod can communicate with localhost.
-
-Kubelets are responsible to launch the pods. It's going to connect to the master node to get this information.
-
-Kube-proxy is going to feed its information about what pods are on nodes to iptables. Iptables is the firewall in Linux and it can also route traffic.
+<i>Kube-proxy</i> is going to feed its information about what pods are on nodes to iptables. Iptables is the firewall in Linux and it can also route traffic.
 So whenever a new pod is launched the kube-proxy is going to change the Iptables rules to make sure that the pod is routable within the cluster.
 
 
@@ -28,48 +14,106 @@ So whenever a new pod is launched the kube-proxy is going to change the Iptables
 // TODO
 
 ###### Minikube
-Minikube is a tool that makes it easy to run Kubernetes locally.
-Minikube runs a single-node Kubernetes cluster inside a Linux VM.
+<i>Minikube</i> is a tool that makes it easy to run Kubernetes locally.
+<i>Minikube</i> runs a single-node Kubernetes cluster inside a Linux VM.
 https://github.com/kubernetes/minikube
 It cannot spin up a production cluster, it's a one node machine with no high availability.
 
-```bash
-curl -Lo minikube https://storage.googleapis.com/minikube/releases/v1.3.0/minikube-linux-amd64 && chmod +x minikube && sudo cp minikube /usr/local/bin/ && rm minikube
-```
+<table>
+<tr>
+<td>Minikube version
+<td>
 
 ```bash
-minikube version
+curl -Lo minikube https://storage.googleapis.com/minikube/releases/v1.3.0/minikube-linux-amd64 && 
+chmod +x minikube && sudo cp minikube /usr/local/bin/ && rm minikube
 ```
-Checks if Minikube is properly installed
+</tr>
+<tr>
+<td>Checks if Minikube is properly installed
+<td>
 
-```bash
+``` bash
 minikube start --wait=false && \
 cat ~/.kube/config 
 # --driver=none if already running on VM
+# preferred driver: docker
 ```
+<td>
 
 ```bash
-kubectl run hello-world --image=gcr.io/google_containers/echoserver:1.4 --port=8080
+Verifying Kubernetes components...
+🌟  Enabled addons: storage-provisioner, dashboard, default-storageclass
+🏄  Done! kubectl is now configured to use "minikube" cluster and "default" namespace by default
 ```
-Hello World in Kubernetes.
+<tr>
+<td>Hello World in Kubernetes.
+<td>
+
+```bash
+kubectl create deployment hello-world --image=gcr.io/google_containers/echoserver:1.4 --port=8080
+```
+<td>
+
+```bash
+pod/hello-world created
+```
+<tr>
+<td>Expose service to access externally. Deployment goes to non master nodes.
+<td>
 
 ```bash
 kubectl expose deployment hello-world --type=NodePort
 ```
-Expose service to access externally. Deployment goes to non master nodes.
+<td>
+
+```bash
+service/hello-world exposed
+```
+<tr>
+<td>Status
+<td>
+
+```bash
+kubectl get all
+```
+<td>
+
+``` yaml
+NAME              READY   STATUS    RESTARTS   AGE
+pod/hello-world   1/1     Running   0          62s
+
+NAME                  TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)    AGE
+service/hello-world   ClusterIP   10.106.X.Y  <none>        8080/TCP   4s
+service/kubernetes    ClusterIP   10.96.X.Y        <none>        443/TCP    4d2h
+```
+<tr>
+<td>Show Kubernetes dashboard
+<td>
+
+```bash
+minikube dashboard --url
+```
+
+
+<tr>
+<td>Stop Minikube
+<td>
 
 ```bash
 minikube stop
 ```
-Stop Minikube
+</table>
 
 
-###### Pod  
+###### Pod
 Pod describes an application running on Kubernetes. 
-Can container on or more containers.
-Each pod is given an unique IP address.
-Containers in a pod can spean to each other on localhost.
-They share the same network, storage, process space.
+Can contain one or more containers. Each pod is given an unique IP address. Containers in a pod can spean to each other on localhost. They share the same network, storage, process space.
+
+<table>
+<tr>
+<td>Pod resource definition
+<td>
 
 ```yaml
 apiVersion: v1
@@ -86,51 +130,134 @@ spec:
      - name: nodejs-port
      containerPort: 3000
 ```
+<tr>
+<td>Create Pod on the Kubernetes cluster.
+<td>
 
 ```bash
-kubectl create -f <path_to_file>.yml
+kubectl apply -f helloworld.yml
 ```
-Create Pod on the Kubernetes clsuter.
+<td>
+
+```
+pod/nodehelloworld.example.com created
+```
+<tr>
+<td>Get information about all running pods.
+<td>
 
 ```bash
 kubectl get pod
 ```
-Get information about all running pods.
+<td>
 
 ```bash
-kubectl describe pod <pod>
+NAME                         READY   STATUS    RESTARTS   AGE
+nodehelloworld.example.com   1/1     Running   0          52s
 ```
-Describe one pod.
+<tr>
+<td>Describe one pod.
+<td>
 
 ```bash
-kubectl expose pod <pod> --port=444 --name=frontend
+kubectl describe pod pod/nodehelloworld.example.com
 ```
-Expose the port of a pod. Creates a new service.
+<td>
+
+```yaml
+Name:         nodehelloworld.example.com
+Namespace:    default
+Priority:     0
+Node:         minikube/192.168.Y.X
+Start Time:   Thu, 19 Nov 2020 21:29:28 +0100
+Labels:       app=helloworld
+Annotations:  <none>
+Status:       Running
+IP:           172.17.Y.X
+IPs:
+  IP:  172.17.Y.X
+Containers:
+  k8s-demo:
+    Container ID:   docker://2e92c3a27d78df3a59706ad5c89ce72469f6050eab7b6d004ab1ebf493182f99
+    Image:          wardviaene/k8s-demo
+    Image ID:       docker-pullable://wardviaene/k8s-demo@sha256:2c050f462f5d0b3a6430e7869bcdfe6ac48a447a89da79a56d0ef61460c7ab9e
+    Port:           3000/TCP
+    Host Port:      0/TCP
+    State:          Running
+      Started:      Thu, 19 Nov 2020 21:29:31 +0100
+    Ready:          True
+    Restart Count:  0
+    Environment:    <none>
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from default-token-8thtz (ro)
+Conditions:
+  Type              Status
+  Initialized       True
+  Ready             True
+  ContainersReady   True
+  PodScheduled      True
+Volumes:
+  default-token-8thtz:
+    Type:        Secret (a volume populated by a Secret)
+    SecretName:  default-token-8thtz
+    Optional:    false
+QoS Class:       BestEffort
+Node-Selectors:  <none>
+Tolerations:     node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                 node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+Events:
+  Type    Reason     Age   From               Message
+  ----    ------     ----  ----               -------
+  Normal  Scheduled  98s   default-scheduler  Successfully assigned default/nodehelloworld.example.com to minikube
+  Normal  Pulling    98s   kubelet            Pulling image "wardviaene/k8s-demo"
+  Normal  Pulled     96s   kubelet            Successfully pulled image "wardviaene/k8s-demo" in 2.1721431s
+  Normal  Created    96s   kubelet            Created container k8s-demo
+  Normal  Started    96s   kubelet            Started container k8s-demo
+```
+<tr>
+<td>Expose the port of a pod. Creates a new service. By default type is <i>CLUSTER-IP</i>.
+<td>
 
 ```bash
-kubectl port-forward <pod> 8080
+kubectl expose pod/nodehelloworld.example.com --port=444 --name=frontend
 ```
-Forward port the exposed pod port to local machine.
+<tr>
+<td>Forward port the exposed pod port to local machine.
+<td>
 
 ```bash
-kubectl attach <podname> -i
+kubectl port-forward pod/nodehelloworld.example.com 8080
 ```
-Attach to the pod.
+<tr>
+<td>Attach to the pod.
+<td>
 
 ```bash
-kubectl exec <pod> --command
+kubectl attach pod/nodehelloworld.example.com -i
 ```
-Wxecute a command on the pod
+<tr>
+<td>Execute a command on the pod
+<td>
 
 ```bash
-kubectl label pods <pod> mylabel=awesome     
+kubectl exec --stdin --tty pod/nodehelloworld.example.com -- /bin/bash
 ```
-Add label to a pod.
+<tr>
+<td>Run a shell in a pod.
+<td>
 
 ```bash
 kubectl run -i -tty busybox --image=busybox --restart=Never --sh
 ```
-Run a shell in a pod.
+</table>
+
+###### Service
+Kubernetes Service group Pods with shared IP, allow external access to Pods.
+
+<table>
+<tr>
+<td>Service resource definition
+<td>
 
 ```yaml
 apiVersion: v1
@@ -144,52 +271,64 @@ spec:
      targetPort: nodejs-port
      protocol: TCP
      selector:
-     app: helloworld
+       app: helloworld
      type: NodePort
 ```
-kubectl create -f app/helloworld.yml
+<tr>
+<td>Create Pod Resource
+<td>
 
 ```bash
-kubectl get pod
-kubectl describe pod nodehelloworld.example.com
-kubectl port-forward nodehelloworld.example.com 8081:3000
+kubectl apply -f first-app/helloworld.yml
 ```
+<tr>
+<td>Create Service Resource of type <i>NodePort</i>
+<td>
 
 ```bash
-kubectl expose pod nodehelloworld.example.com --type=NodePort --name <service_name>
+kubectl apply -f=first-app/helloworld-nodeport-service.yml
 ```
-NodePort means that we can directly access port 3000 on the Kubernetes and it will redirect to this pod.
+<tr>
+<td>Forward traffic to cluster for <i>NodePort</i> service.NodePort means that we can directly access port 3000 on the Kubernetes and it will redirect to this pod.
+<td>
 
 ```bash
-|minikube service <service_name> --url
+kubectl port-forward pod/nodehelloworld.example.com 8081:3000
 ```
-Retrive service.
+<td>
 
 ```bash
-kubectl attach <service_name>
+Forwarding from 127.0.0.1:8081 -> 3000
+Forwarding from [::1]:8081 -> 3000
 ```
-Attach to running process. Acces to logs.
+<tr>
+<td>Create Service Resource of type <i>LoadBalancer</i>.
+The LoadBalancer Service will create a port that is open on every node, that can be used by the AWS LoadBalancer to connect. That port is owned by the Service, so that the traffic can be routed to the correct pod.
+<td>
 
 ```bash
-kubectl exec <service_name> <command>
-kubectl exec nodehelloworld --ls /app
+kubectl apply -f=first-app/helloworld-service.yml
 ```
-Runn a command inside running service.
+<tr>
+<td>Access load balancer
 
-###### Setting up Load Balancer
-Load Balancer will route the traffic to the correct pod on Kubernetes.
+<td>
+
 ```bash
-kubectl create -f k8s/elb/helloworld.yml
-kubectl create -f k8s/elb/helloworld-service.yml
+minikube service helloworld-service --url
 ```
-The LoadBalancer Service will create a port that is open on every node, that can be used by the AWS LoadBalancer to connect. That port is owned by the Service, so that the traffic can be routed to the correct pod
-
+</table>
 
 ###### Scaling pods
-Scaling in Kubernetes can be done using the Replication Controller.
-Replication Controller will ensure a specific of pod replicas will run at all time.
+Scaling in Kubernetes can be done using the <i>Replication Controller</i>.
+<i>Replication Controller</i> will ensure a specific of pod replicas will run at all time.
 A pods created with the replica controller will automatically be replaced if they fail, get delected, or are terminated.
 We can horizontally scalling only stateless pods.
+
+<table>
+<tr>
+<td> ReplicationController <br>resource definition
+<td>
 
 ```yaml
 apiVersion: v1
@@ -199,11 +338,11 @@ metadata:
 spec:
      replicas: 2
      selector:
-     app: helloworld
+       app: helloworld
      template:
-     metadata:
-     labels:
-          app: helloworld
+       metadata:
+       labels:
+        app: helloworld
      spec:
      containers:
      - name: k8s-demo
@@ -212,28 +351,52 @@ spec:
           - name: nodejs-port
           containerPort: 3000
 ```
+<tr>
+<td>Create <i>ReplicationController</i>
+<td>
+
 ```bash
-kubectl create -f k8s/replication-controller/helloworld-repl-controller.yml && \
-kubectl get pods
-kubectl delete pod <name>
+kubectl create -f k8s/replication-controller/helloworld-repl-controller.yml
 ```
+<tr>
+<td>Status
+<td>
+
+```bash
+kubectl get all
+```
+<td>
+
+```yaml
+NAME                              READY   STATUS    RESTARTS   AGE
+pod/helloworld-controller-blpf9   1/1     Running   0          6m50s
+pod/nodehelloworld.example.com    1/1     Running   0          32m
+
+NAME                                          DESIRED   CURRENT   READY   AGE
+replicationcontroller/helloworld-controller   2         2         2       6m51s
+
+NAME                         TYPE           CLUSTER-IP      EXTERNAL-IP   PORT(S)        AGE
+service/helloworld-service   LoadBalancer   10.107.X.Y   <pending>     80:32155/TCP   32m
+service/kubernetes           ClusterIP      10.96.X.Y       <none>        443/TCP        4d6h
+```
+<tr>
+<td>Scale in imperative way
+<td>
 
 ```bash
 kubectl scale --replicas=4 -f k8s/replication-controller/helloworld-repl-controller.yml && \
 kubectl get pods
 ```
+</table>
 
-```bash
-kubectl rollout status deploy/nginx
-```
 
 ###### Deployments
 
 ![Kubernetes Glossary](/k8s/imgs/kubernetesGlossary.png)
 
-Replication Set is the next generation of Replication Controller.
+<i>Replication Set</i> is the next generation of Replication Controller.
 It support a new selector that can selection based on filtering according a set values, e.g environment.
-Replica Set is used by the Deployment object.
+<i>Replica Set</i> is used by the <i>Deployment</i> object.
 When using the deployment object, you define the state of application. Kubernetes will then make sure the cluster matches your desired state.
 With deployment object you can:
 - Create a deployment
@@ -258,15 +421,30 @@ can know what changes are made.
 It's also not very flexible: the options are limited, and additional commands must be run
 to expose the Deployment as an externally available service.
 
-kubernetes deployment object is suitable for stateless application.
+Kubernetes deployment object is suitable for stateless application.
 Deployments are more rebust and provide additional objects.
 However, a minimalist Deployment can look exactly like a ReplicaSet.
 
-```yaml
+<table>
+<tr>
+<td>
+
+```bash
 kubectl create deploy  nginx --image=nginx:1.16-alpine
+```
+<tr>
+<td>
+
+```bash
 kubectl delete deploy/nginx
+```
+<tr>
+<td>
+
+```bash
 kubectl set image deploy/nginx nginx=nginx:1.17-alpine
 ```
+</table>
 
 ```yaml
 apiVersion: extensions/v1beta1
@@ -288,27 +466,37 @@ spec:
           containerPort: 3000
 ```
 
+<table>
+<tr>
+<td>Get information on current deployments.
+<td>
 
 ```bash
 kubectl get deployments 
 ```
-Get information on current deployments.
+<tr>
+<td>Get information about the replisa sets.
+<td>
 
 ```bash
 kubectl get rs
 ```
-Get information about the replisa sets.
+<tr>
+<td>Get pods and show labels attached to those pods.
+<td>
 
 ```bash
 kubectl get pods --show-labels
 ```
-Get pods and show labels attached to those pods.
+
+<tr>
+<td>Get deployment status.
+<td>
 
 ```bash
 kubectl rollout status deployment/helloworld-deployment
 ```
-Get deployment status.
-
+</table>
 
 ```bash
 kubectl create -f k8s/deployment/helloworld.yml
@@ -352,7 +540,7 @@ kubectl delete svc helloworld-service
 Example of Service, using static node port
 
 ###### Labels
-Labels are key/value pairs that can be attached to objects.
+<i>Labels</i> are key/value pairs that can be attached to objects.
 Labels are like tags in AWS or other cloud providers, used to tag resources.
 Label can be used to tag nodes, once nodes are tagged, you can use label selectors to let pods only run on specific nodes.
 
@@ -374,23 +562,107 @@ There are two different type of health check:
 - Running a command in the container periodically
 - Periodic check on a URL
 
+<table>
+<tr>
+<td>Deployment with healthcheck (livenessProbe)
+<td>
+
+```yaml
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: helloworld-deployment
+spec:
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        app: helloworld
+    spec:
+      containers:
+      - name: k8s-demo
+        image: wardviaene/k8s-demo
+        ports:
+        - name: nodejs-port
+          containerPort: 3000
+        livenessProbe:
+          httpGet:
+            path: /
+            port: nodejs-port
+          initialDelaySeconds: 15
+          timeoutSeconds: 30
+
+```
+<tr>
+<td>Example of Health checks
+<td>
+
 ```bash
 kubectl create -f k8s/deployment/helloworld-healthcheck.yml
 kubectl get deployments
 kubectl get pods
 kubectl edit deployment/helloworld-deployment
 ```
-Example of Health checks
+</table>
 
 ###### Readiness Probe.
-Besides livenessProbes you can also use readinessProbe on a container within a Pod.
-LivenessProbes indicate wheter container is running.
+Besides <i>livenessProbes</i> you can also use <i>readinessProbe</i> on a container within a Pod.
+<i>LivenessProbes</i> indicate wheter container is running.
 If the check fail, the container will be restarted.
-ReadinessProbe indicateswhether the container is ready to serve requests.
+<i>ReadinessProbe</i> indicateswhether the container is ready to serve requests.
 If the check fails the container will not be restarted, but the Pod's IP address will be removed ffom the service, so it'll not serve any requesty anymore.
-```bash
-kubectl create -f k8s/deployment/helloworld-liveness-readiness.yml && watch -n1 kubectl get pods
+
+<table>
+<tr>
+<td>Deployment with<br> 
+<i>readinessProbe</i>
+<td>
+
+```yaml
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: helloworld-readiness
+spec:
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        app: helloworld
+    spec:
+      containers:
+      - name: k8s-demo
+        image: wardviaene/k8s-demo
+        ports:
+        - name: nodejs-port
+          containerPort: 3000
+        livenessProbe:
+          httpGet:
+            path: /
+            port: nodejs-port
+          initialDelaySeconds: 15
+          timeoutSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /
+            port: nodejs-port
+          initialDelaySeconds: 15
+          timeoutSeconds: 30
+
 ```
+<tr>
+<td>
+<td>
+
+```bash
+kubectl create -f k8s/deployment/helloworld-liveness-readiness.yml
+watch -n1 kubectl get pods
+```
+</table>
+
+
+</table>
+
 
 ###### Pod state
 State Running
@@ -430,14 +702,67 @@ There are 3 different types of containers state:
 ######  Secrets
 Secrets provides a way in Kubernetes to distribute credentials, keys, passwords, etc.
 Kubernetes itself uses this Secrets mechanism to provide the credentials to access the internal API.
-We can use as environmental variables, as file in pod. Can be used for dotenv files.
+We can use as environmental variables, as file in pod. Can be used for dotenv files. A secret can also be an SSH key or an SSL certificate.
+
+<table>
+<tr>
+<td>Create <i>Secret</i>
+<td>
+
 ```bash
 echo -n "root > ./username
 echo -n "password" > ./password
 kubectl create secret generic db-user-pass --from-file=./username --from-file=./password
 ```
+<tr>
+<td>
+<td>
 
-A secret can also be an SSH key or an SSL certificate.
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: db-secrets
+type: Opaque
+data:
+  username: cm9vdA==
+  password: cGFzc3dvcmQ=
+
+```
+<tr>
+<td><i>Deployment</i> with <i>Secret</i>
+<td>
+
+```yaml
+apiVersion: v1
+kind: Deployment
+metadata:
+  name: helloworld-deployment
+spec:
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        app: helloworld
+    spec:
+      containers:
+      - name: k8s-demo
+        image: wardviaene/k8s-demo
+        ports:
+        - name: nodejs-port
+          containerPort: 3000
+        volumeMounts:
+        - name: cred-volume
+          mountPath: /etc/creds
+          readOnly: true
+      volumes:
+      - name: cred-volume
+        secret: 
+          secretName: db-secrets
+```
+<tr>
+<td>
+<td>
 
 ```bash
 kubectl create -f k8s/deployment/helloworld-secrets.yml
@@ -446,21 +771,7 @@ kubectl get pods
 kubectl exec <pod_name> -i -t -- /bin/bash
 cat /etc/creds/username
 ```
-Example of secrets
-
-```bash
-kubectl create -f k8s/wordpress/wordpress-secrets.yml
-kubectl create -f k8s/wordpress/wordpress-single-deployment-no-volumes.yml
-kubectl create -f k8s/wordpress/wordpress-service.yml
-minikube service wordpress-service --url
-```
-Wordpress  example with no volumes
-
-
-```bash
-minikube dashboard --url
-```
-Show Kubernetes dashboard
+</table>
 
 ######  Service Discovery using DNS.
 As on Kubernetes 1.3, DNS is built-in service launched automatically using the addon manager.
@@ -490,17 +801,81 @@ The ConfigMap key-value pairs can then be read by the app using:
 - Using volumes
 ConfigMap can also contain full configuration files.
 Using ConfigMap:
-- You can create a pod that exposes the configMap usin a volume
-- You can create a pod that exposesthe configMap as environment variables.
+- You can create a pod that exposes the configMap using a volume
+- You can create a pod that exposes the configMap as environment variables.
 
-```bash
+<table>
+<tr>
+<td>reverseproxy.conf
+<td>
+
+```nginx
+server {
+    listen       80;
+    server_name  localhost;
+
+    location / {
+        proxy_bind 127.0.0.1;
+        proxy_pass http://127.0.0.1:3000;
+    }
+
+    error_page   500 502 503 504  /50x.html;
+    location = /50x.html {
+        root   /usr/share/nginx/html;
+    }
+}
+
+```
+<tr>
+<td>Create configMap
+<td>
+
+``` bash
 kubectl create configmap nginx-config --fromfile=k8s/configmap/reverseproxy.conf
 kubectl get configmap nginx-config -o yaml
+```
+<tr>
+<td><i>Pod</i> with <i>ConfigMap</i>
+<td>
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: helloworld-nginx
+  labels:
+    app: helloworld-nginx
+spec:
+  containers:
+  - name: nginx
+    image: nginx:1.11
+    ports:
+    - containerPort: 80
+    volumeMounts:
+    - name: config-volume
+      mountPath: /etc/nginx/conf.d
+  - name: k8s-demo
+    image: wardviaene/k8s-demo
+    ports:
+    - containerPort: 3000
+  volumes:
+    - name: config-volume
+      configMap:
+        name: nginx-config
+        items:
+        - key: reverseproxy.conf
+          path: reverseproxy.conf
+```
+<tr>
+<td>
+<td>
+
+```bash
 kubectl create -f k8s/configmap/nginx.yml
 kubectl create -f k8s/configmap/nginx-service.yml
-kubectl service helloworld-nginx-service --url
 ```
-Example: ConfigMap
+</table>
+
 
 ######  Ingress
 
@@ -511,6 +886,45 @@ Ingress allows to easily expose services that need to be accessible form outsidd
 With ingress you can run own ingress controller (basically a loadbalancer) within the Kubernetes cluster.
 You can create ingress rules using the ingress object.
 
+<table>
+<tr>
+<td><i>Ingress</i> Resource
+<td>
+
+```yaml
+# An Ingress with 2 hosts and 3 endpoints
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: helloworld-rules
+spec:
+  rules:
+  - host: helloworld-v1.example.com
+    http:
+      paths:
+      - pathType: Prefix
+        path: /
+        backend:
+          service:
+            name: helloworld-v1
+            port:
+              number: 80
+  - host: helloworld-v2.example.com
+    http:
+      paths:
+      - pathType: Prefix
+        path: /
+        backend:
+          service:
+            name: helloworld-v2
+            port:
+              number: 80
+
+```
+<tr>
+<td>
+<td>
+
 ```bash
 kubectl create -f k8s/ingress/ingress.yml 
 kubectl create -f k8s/ingress/nginx-ingress-controller.yml
@@ -519,7 +933,8 @@ kubectl create -f k8s/ingress/helloworld-v1.yml
 kubectl create -f k8s/ingress/helloworld-v2.yml 
 kubectl get pod
 ```
-Example of Ingress Controller
+</table>
+
 
 ###### Egress Gateway
 Every traffic that needs to exit the service mesh needs to go via Egress Gateway.
@@ -536,6 +951,96 @@ Volumes in Kubernetes allow to store data outside the container.
 When a container stops, all data on the container itself is lost.
 Persistent volumes in Kubernetes allow to attach a volume to a container that will exists even when the container stops. Volumes than can re reattached.
 To use volumes, you need to create a pod with a volume definition.
+
+<table>
+<tr>
+<td>
+Define<br>PersistentVolumeClaim
+</td>
+<td>
+
+``` yml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: host-pvc
+spec:
+  volumeName: host-pv
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: standard  
+  resources:
+    requests:
+      storage: 1Gi 
+ 
+```
+</td>
+</tr>
+<tr>
+<td>
+Define<br>PersistentVolume
+</td>
+<td>
+
+```yml
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: host-pv
+spec:
+  capacity:
+    storage: 1Gi
+  volumeMode: Filesystem
+  storageClassName: standard
+  accessModes:
+    - ReadWriteOnce  
+  hostPath:
+    path: /data/
+```
+</td>
+</tr>
+<tr>
+<td>
+Define
+
+Deployment
+with PersistentVolumeClaim
+</td>
+<td>
+
+```yml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: helloworld-deployment
+  labels:
+    app: helloworld
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: helloworld
+  template:
+    metadata:
+      labels:
+        app: helloworld
+    spec:
+      containers:
+      - name: k8s-demo
+        image: ubuntu
+        volumeMounts:
+          - mountPath: /home
+            name: demo-volume   
+      volumes:
+        - name: demo-volume
+          persistentVolumeClaim: 
+            claimName: host-pvc 
+```
+</td>
+</tr>
+</table>
+
+
 
 ###### Volumes AutoProvisioning
 The Kubernetes plugins have the capability to provision storage.
@@ -1382,8 +1887,8 @@ NAME                         READY   STATUS    RESTARTS   AGE
 pod/nginx-7cf5c7ddb5-f84zf   1/1     Running   0          10s
 
 NAME                 TYPE        CLUSTER-IP    EXTERNAL-IP   PORT(S)        AGE
-service/kubernetes   ClusterIP   10.43.0.1     <none>        443/TCP        123m
-service/nginx        NodePort    10.43.55.21   <none>        80:30523/TCP   10s
+service/kubernetes   ClusterIP   10.43.X.Y     <none>        443/TCP        123m
+service/nginx        NodePort    10.43.X.Y   <none>        80:30523/TCP   10s
 
 NAME                    READY   UP-TO-DATE   AVAILABLE   AGE
 deployment.apps/nginx   1/1     1            1           10s
@@ -1400,9 +1905,9 @@ pod/nginx-7cf5c7ddb5-f84zf          1/1     Running   0          5m1s
 pod/staging-nginx-f4b4bbfc8-khwfm   1/1     Running   0          6s
 
 NAME                    TYPE        CLUSTER-IP    EXTERNAL-IP   PORT(S)        AGE
-service/kubernetes      ClusterIP   10.43.0.1     <none>        443/TCP        128m
-service/nginx           NodePort    10.43.55.21   <none>        80:30523/TCP   5m1s
-service/staging-nginx   NodePort    10.43.94.38   <none>        80:31543/TCP   6s
+service/kubernetes      ClusterIP   10.43.X.Y     <none>        443/TCP        128m
+service/nginx           NodePort    10.43.X.Y   <none>        80:30523/TCP   5m1s
+service/staging-nginx   NodePort    10.43.X.Y   <none>        80:31543/TCP   6s
 
 NAME                            READY   UP-TO-DATE   AVAILABLE   AGE
 deployment.apps/nginx           1/1     1            1           5m1s
@@ -1426,10 +1931,10 @@ pod/prod-nginx-59b47887cb-nx7pq     1/1     Running   0          24s
 pod/prod-nginx-59b47887cb-552jt     1/1     Running   0          24s
 
 NAME                    TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)        AGE
-service/kubernetes      ClusterIP   10.43.0.1      <none>        443/TCP        129m
-service/nginx           NodePort    10.43.55.21    <none>        80:30523/TCP   6m34s
-service/staging-nginx   NodePort    10.43.94.38    <none>        80:31543/TCP   99s
-service/prod-nginx      NodePort    10.43.70.232   <none>        80:30339/TCP   25s
+service/kubernetes      ClusterIP   10.43.X.Y      <none>        443/TCP        129m
+service/nginx           NodePort    10.43.X.Y    <none>        80:30523/TCP   6m34s
+service/staging-nginx   NodePort    10.43.X.Y    <none>        80:31543/TCP   99s
+service/prod-nginx      NodePort    10.43.X.Y   <none>        80:30339/TCP   25s
 
 NAME                            READY   UP-TO-DATE   AVAILABLE   AGE
 deployment.apps/nginx           1/1     1            1           6m34s
@@ -1457,11 +1962,11 @@ pod/prod-nginx-59b47887cb-552jt     1/1     Running   0          52m
 pod/dev-nginx-6cc6b9f788-sq9z4      1/1     Running   0          5s
 
 NAME                    TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)        AGE
-service/kubernetes      ClusterIP   10.43.0.1       <none>        443/TCP        3h1m
-service/nginx           NodePort    10.43.55.21     <none>        80:30523/TCP   58m
-service/staging-nginx   NodePort    10.43.94.38     <none>        80:31543/TCP   53m
-service/prod-nginx      NodePort    10.43.70.232    <none>        80:30339/TCP   52m
-service/dev-nginx       ClusterIP   10.43.138.192   <none>        80/TCP         5s
+service/kubernetes      ClusterIP   10.43.X.Y       <none>        443/TCP        3h1m
+service/nginx           NodePort    10.43.X.Y     <none>        80:30523/TCP   58m
+service/staging-nginx   NodePort    10.43.X.Y     <none>        80:31543/TCP   53m
+service/prod-nginx      NodePort    10.43.X.Y    <none>        80:30339/TCP   52m
+service/dev-nginx       ClusterIP   10.43.X.Y   <none>        80/TCP         5s
 
 NAME                            READY   UP-TO-DATE   AVAILABLE   AGE
 deployment.apps/nginx           1/1     1            1           58m
