@@ -11,7 +11,13 @@ So whenever a new pod is launched the kube-proxy is going to change the Iptables
 ## Kubernetes Setup
 
 ###### k3s
-// TODO
+// TODO:
+
+###### k0s
+// TODO:
+
+###### kind
+// TODO:
 
 ###### Minikube
 <i>Minikube</i> is a tool that makes it easy to run Kubernetes locally.
@@ -1051,12 +1057,59 @@ Can inject information into pods at runtime.
 Pod Presets are used to inject Kubernetes resources like Secrets, ConfigMaps, Volumes and environmental varibles.
 When injecting environment variables and volumemounts, the pod presets will apply the changes to all containers within the pod.
 
+<table>
+<td>PodPreset<br>definition
+<td>
+
+```yaml
+apiVersion: settings.k8s.io/v1alpha1
+kind: PodPreset
+metadata:
+  name: allow-database
+spec:
+  selector:
+    matchLabels:
+      role: frontend
+  env:
+    - name: DB_PORT
+      value: "6379"
+  volumeMounts:
+    - mountPath: /cache
+      name: cache-volume
+  volumes:
+    - name: cache-volume
+      emptyDir: {}
+```
+<tr>
+<td>Attaching<br>PodPreset<br>to Pod
+<td>
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: website
+  labels:
+    app: website
+    role: frontend
+spec:
+  containers:
+    - name: website
+      image: nginx
+      ports:
+        - containerPort: 80
+```
+
+<tr>
+<td>Apply<br>Objects
+<td>
+
 ```bash
 kubectl create -f k8s/pod-presets/pod-presets.yml
 kubectl get podpresets
 kubectl create -f deployments.yml
 ```
-Example of  Presets
+</table>
 
 ###### StatefulSets
 It's introduced to be able to run stateful applications.
