@@ -1,0 +1,40 @@
+kind: Pod
+apiVersion: v1
+metadata:
+  name: echo2-app
+  labels:
+    app: echo2
+spec:
+  containers:
+  - name: echo2-app
+    image: hashicorp/http-echo:0.2.3
+    args:
+    - "-text=echo2"
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: echo2-service
+spec:
+  selector:
+    app: echo2
+  ports:
+  - port: 5678
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: networking.k8s.io.v1.new.ingress.echo2.default
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /echo2
+        pathType: Prefix
+        backend:
+          service:
+            name: echo2-service
+            port:
+              number: 5678
