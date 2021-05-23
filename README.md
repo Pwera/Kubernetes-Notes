@@ -6,20 +6,10 @@
 <i>Kube-proxy</i> is going to feed its information about what pods are on nodes to iptables. Iptables is the firewall in Linux and it can also route traffic.
 So whenever a new pod is launched the kube-proxy is going to change the Iptables rules to make sure that the pod is routable within the cluster.
 
-
-
-## Kubernetes Setup
-
-###### k3s
-// TODO:
-
-###### k0s
-// TODO:
-
-###### kind
-// TODO:
-
 ###### Minikube
+
+<details>
+<summary>Click to expand Minikube!</summary>
 <i>Minikube</i> is a tool that makes it easy to run Kubernetes locally.
 <i>Minikube</i> runs a single-node Kubernetes cluster inside a Linux VM.
 https://github.com/kubernetes/minikube
@@ -111,8 +101,11 @@ minikube stop
 ```
 </table>
 
+</details>
 
 ###### Pod
+<details>
+<summary>Click to expand Pod!</summary>
 Pod describes an application running on Kubernetes. 
 Can contain one or more containers. Each pod is given an unique IP address. Containers in a pod can spean to each other on localhost. They share the same network, storage, process space.
 
@@ -256,8 +249,12 @@ kubectl exec --stdin --tty pod/nodehelloworld.example.com -- /bin/bash
 kubectl run -i -tty busybox --image=busybox --restart=Never --sh
 ```
 </table>
+</details>
 
 ###### Service
+
+<details>
+<summary>Click to expand Service!</summary>
 Kubernetes Service group Pods with shared IP, allow external access to Pods.
 
 <table>
@@ -325,7 +322,12 @@ minikube service helloworld-service --url
 ```
 </table>
 
+</details>
+
 ###### Scaling pods
+
+<details>
+<summary>Click to expand Scaling pods!</summary>
 Scaling in Kubernetes can be done using the <i>Replication Controller</i>.
 <i>Replication Controller</i> will ensure a specific of pod replicas will run at all time.
 A pods created with the replica controller will automatically be replaced if they fail, get delected, or are terminated.
@@ -395,8 +397,12 @@ kubectl get pods
 ```
 </table>
 
+</details>
 
 ###### Deployments
+
+<details>
+<summary>Click to expand Deployments!</summary>
 
 ![Kubernetes Glossary](/k8s/imgs/kubernetesGlossary.png)
 
@@ -520,7 +526,16 @@ kubectl undo k8s/deployment/helloworld-deployment
 ```
 Example of deployment
 
+Deploymnet field
+observedGeneration:
+Shows how often the deployment has been updated. This information can be used to understand the rollout and rollback situation of the deployment.
+
+</details>
+
 ###### Services
+
+<details>
+<summary>Click to expand Services!</summary>
 
 Defines a DNS entry that can be used to refer to a group of pods.
 Pods are very dynamic, they come and go  on the Kubernetes cluster.
@@ -544,8 +559,13 @@ kubectl describe svc helloworld-service
 kubectl delete svc helloworld-service
 ```
 Example of Service, using static node port
+</details>
 
 ###### Labels
+
+<details>
+<summary>Click to expand Labels!</summary>
+
 <i>Labels</i> are key/value pairs that can be attached to objects.
 Labels are like tags in AWS or other cloud providers, used to tag resources.
 Label can be used to tag nodes, once nodes are tagged, you can use label selectors to let pods only run on specific nodes.
@@ -562,8 +582,12 @@ kubectl label nodes minikube hardware=high-spec
 kubectl get nodes --show-labels
 ```
 Example of lables
+</details>
 
 ###### Health checks
+
+<details>
+<summary>Click to expand Health checks!</summary>
 There are two different type of health check:
 - Running a command in the container periodically
 - Periodic check on a URL
@@ -610,13 +634,19 @@ kubectl get pods
 kubectl edit deployment/helloworld-deployment
 ```
 </table>
+</details>
 
 ###### Readiness Probe.
+
+<details>
+<summary>Click to expand Readiness Probe!</summary>
 Besides <i>livenessProbes</i> you can also use <i>readinessProbe</i> on a container within a Pod.
 <i>LivenessProbes</i> indicate wheter container is running.
 If the check fail, the container will be restarted.
 <i>ReadinessProbe</i> indicateswhether the container is ready to serve requests.
 If the check fails the container will not be restarted, but the Pod's IP address will be removed ffom the service, so it'll not serve any requesty anymore.
+
+Using a defined header to a particular port and path, the container is not considered healthy until the web server returns a code 200-399. Any other code indicates failure, and the probe will try again.
 
 <table>
 <tr>
@@ -668,9 +698,11 @@ watch -n1 kubectl get pods
 
 
 </table>
-
+</details>
 
 ###### Pod state
+<details>
+<summary>Click to expand Pod state!</summary>
 State Running
 - Pod has been bound to a node.
 - All containers have been created.
@@ -704,8 +736,11 @@ There are 3 different types of containers state:
 - Running
 - Terminated
 - Waiting
+</details>
 
 ######  Secrets
+<details>
+<summary>Click to expand Secrets!</summary>
 Secrets provides a way in Kubernetes to distribute credentials, keys, passwords, etc.
 Kubernetes itself uses this Secrets mechanism to provide the credentials to access the internal API.
 We can use as environmental variables, as file in pod. Can be used for dotenv files. A secret can also be an SSH key or an SSL certificate.
@@ -777,9 +812,20 @@ kubectl get pods
 kubectl exec <pod_name> -i -t -- /bin/bash
 cat /etc/creds/username
 ```
+
+In order to encrypt secrets, you must create an EncryptionConfiguration object with a key and proper identity. Then, the kube-apiserver needs the --encryption-provider-config flag set to a previously configured provider, such as aescbc or ksm. Once this is enabled, you need to recreate every secret, as they are encrypted upon write. Multiple keys are possible. Each key for a provider is tried during decryption. The first key of the first provider is used for encryption. To rotate keys, first create a new key, restart (all) kube-apiserver processes, then recreate every secret.
+
+
+
+There is no limit to the number of Secrets used, but there is a 1MB limit to their size. Each secret occupies memory, along with other API objects, so very large numbers of secrets could deplete memory on a host.
+
+They are stored in the tmpfs storage on the host node, and are only sent to the host running Pod. All volumes requested by a Pod must be mounted before the containers within the Pod are started. So, a secret must exist prior to being requested.
 </table>
+</details>
 
 ######  Service Discovery using DNS.
+<details>
+<summary>Click to expand Service Discovery using DNS!</summary>
 As on Kubernetes 1.3, DNS is built-in service launched automatically using the addon manager.
 The addons are on master node.
 The DNS service can be used within pods to find other services running on the same cluster.
@@ -799,7 +845,11 @@ kubectl logs <deploymen_name>
 ```
 Example: Service Discovery
 
+</details>
+
 ######  ConfigMap
+<details>
+<summary>Click to expand ConfigMap!</summary>
 Configuration parameters that are not secret, can be put in a ConfigMap.
 The ConfigMap key-value pairs can then be read by the app using:
 - Environmental variables
@@ -881,10 +931,11 @@ kubectl create -f k8s/configmap/nginx.yml
 kubectl create -f k8s/configmap/nginx-service.yml
 ```
 </table>
-
+</details>
 
 ######  Ingress
-
+<details>
+<summary>Click to expand Ingress!</summary>
 Route traffic to internal  services based on host and path.
 Ingress is a solution available since Kubernetes 1.1 that allows inbound connections to the cluster. 
 It's alternative to the external LoadBalancer and nodePorts
@@ -940,19 +991,24 @@ kubectl create -f k8s/ingress/helloworld-v2.yml
 kubectl get pod
 ```
 </table>
-
-
-###### Egress Gateway
-Every traffic that needs to exit the service mesh needs to go via Egress Gateway.
-
-
 ###### External DNS
 On public cloud providers, you can use the ingress controller to reduce the cost of LoadBalancer.
 You can use one LB that capures all the external traffic and send it to the ingress controller.
-The ingress controller can be configured to route thedifferent traffic to your apps based on http rules(host and prefixes).
+The ingress controller can be configured to route different traffic to your apps based on http rules(host and prefixes).
 This only works for https- based applications.
+</details>
+
+
+###### Egress Gateway
+<details>
+<summary>Click to expand Egress Gateway!</summary>
+Every traffic that needs to exit the service mesh needs to go via Egress Gateway.
+</details>
+
 
 ###### Volumes
+<details>
+<summary>Click to expand Volumes!</summary>
 Volumes in Kubernetes allow to store data outside the container.
 When a container stops, all data on the container itself is lost.
 Persistent volumes in Kubernetes allow to attach a volume to a container that will exists even when the container stops. Volumes than can re reattached.
@@ -1044,15 +1100,78 @@ spec:
 ```
 </td>
 </tr>
+<td>NFS example:
+<td>
+
+``` bash
+sudo apt-get update && sudo apt-get install -y nfs-kernel-server
+
+sudo mkdir /opt/sfw
+
+sudo chmod 1777 /opt/sfw/
+
+sudo bash -c "echo software > /opt/sfw/hello.txt"
+
+sudo bash -c "echo '/opt/sfw/ *(rw,sync,no_root_squash,subtree_check)' >> /etc/exports"
+
+sudo exportfs -ra
+
+echo
+echo "Should be ready. Test here and second node"
+echo
+
+sudo showmount -e localhost
+```
+Commands on second node:
+```
+sudo apt-get -y install nfs-common nfs-kernel-server
+showmount -e master
+sudo mount master:/opt/sfw /mnt
+#unless you edit/etc/fstabthis is not a persistent mount.
+```
+<tr>
+<td> PV Manifest:
+<td>
+
+```yaml
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pvvol-1
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  nfs:
+    path: /opt/sfw
+    server: master
+    readOnly: false
+```
 </table>
 
+
+A particular access mode is part of a Pod request. As a request, the user may be granted more, but not less access, though a direct match is attempted first. The cluster groups volumes with the same mode together, then sorts volumes by size, from smallest to largest. The claim is checked against each in that access mode group, until a volume of sufficient size matches. The three access modes are RWO (ReadWriteOnce), which allows read-write by a single node, ROX (ReadOnlyMany), which allows read-only by multiple nodes, and RWX (ReadWriteMany), which allows read-write by many nodes.
+
+
+Other Volume Types
+ GCEpersistentDisk, awsElasticBlockStore, nfs, azureDisk, azureFile, csi, downwardAPI, fc (fibre channel), flocker, gitRepo, local, projected, portworxVolume, quobyte, scaleIO, secret, storageos, vsphereVolume, persistentVolumeClaim, etc.​
+
+ NFS (Network File System) and iSCSI (Internet Small Computer System Interface) are straightforward choices for multiple readers scenarios.
+
+
+The StorageClass API resource allows an administrator to define a persistent volume provisioner of a certain type, passing storage-specific parameters.
 
 
 ###### Volumes AutoProvisioning
 The Kubernetes plugins have the capability to provision storage.
 This is done using the StorageClass object.
+</details>
 
 ###### Pod Presets
+<details>
+<summary>Click to expand Pod Presets!</summary>
 Can inject information into pods at runtime.
 Pod Presets are used to inject Kubernetes resources like Secrets, ConfigMaps, Volumes and environmental varibles.
 When injecting environment variables and volumemounts, the pod presets will apply the changes to all containers within the pod.
@@ -1110,8 +1229,11 @@ kubectl get podpresets
 kubectl create -f deployments.yml
 ```
 </table>
+</details>
 
 ###### StatefulSets
+<details>
+<summary>Click to expand StatefulSets!</summary>
 It's introduced to be able to run stateful applications.
 A StatefulSet will allow stateful app to use DNS to find other peers.
 ```bash
@@ -1120,21 +1242,30 @@ kubectl get pod
 kubectl get pv
 watch kubectl get pod
 ```
+</details>
 
 
 ###### DeamonSets
+<details>
+<summary>Click to expand DeamonSets!</summary>
 Deamon Sets ensure that every single node in the Kubernetes cluster runs that same pod resource.
 This is useful if you want to ensure that a certain pod is running on every single kubernetes node.
 When a node is added to the cluster, a new pod will be started automatically.
 Same, when a node is removed, the pod will not be rescheduled on another node.
+</details>
 
 ###### Resource Usage Monitoring (deprecated)
+<details>
+<summary>Click to expand Resource Usage Monitoring!</summary>
 Heapster enables Container Cluster Monitoring and Performance Analysis.
 It's providing a monitoring platform for Kubernetes.
 Heapster exports clusters metricks via REST endpoints.
 You can use different backends with Heapster.
+</details>
 
 ###### Autoscaling
+<details>
+<summary>Click to expand Autoscaling!</summary>
 Kubernetes has the possibility to automatically scale pods based on metrics.
 Kubernetes can automatically scale a Deployment, Replication Controller or replicaSet.
 In Kubernetes 1.3 scalling based on CPU usage is possile out of the box.
@@ -1150,25 +1281,37 @@ kubectl get pod
 
 ```
 Example of Autoscaling
+</details>
 
 ###### Affinity, anti-affinity
+<details>
+<summary>Click to expand Affinity, anti-affinity!</summary>
 Affinity, anti-affinity feature allows to do more complex scheduling then the nodeSelector and also works on pods.
 The rules are not hard requirements, bu rather a prefferred rule.
 For example, a rule that makes sure 2 different pods will never be on the same node.
+</details>
 
 ###### Custom Resource Definitions
+<details>
+<summary>Click to expand Custom Resource Definitions!</summary>
 Lets extend the Kubernetes API.
 Resources are the endpoints in the Kubernetes API that store collections of API Objects.
 For example, there is the built-in Deployment resource, that can be used to deploy applications.
 In the yaml files you describe the object, using the Deployment resource type.
 You crete the object on the cluster by using kubectl.
 Operators, exmplained in the next lecture, use these CRDs to extend the Kubernets API, with their own functionality.
+</details>
 
 ###### Operators
+<details>
+<summary>Click to expand Operators!</summary>
 Is a method of packaging, deploying and managing a Kubernetes application.
 An operator contains a lot of the management logic that you as an administrator or user might want, rather than having to implement it yourself.
+</details>
 
 ###### Namespaces
+<details>
+<summary>Click to expand Namespaces!</summary>
 Namespaces allow to create virtual clusters within the same physical cluser.
 Namespaces logically separates you cluster.
 The standard namespace is called default and that's where all resources are launched in by default.
@@ -1187,8 +1330,12 @@ kubectl describe rs/<deploy> --namespace=myspace
 kubectl create -f k8s/resourcequotas/helloworld-with-quotas.yml
 ```
 Example of Namespaces
+</details>
 
 ###### Networking
+
+<details>
+<summary>Click to expand Networking!</summary>
 Container to container communication  within a pod through localhost and the port number.
 Pod to Service communication using nodePort using DNS.
 External to service communication using loadbalancer, ingress, nodePort.
@@ -1199,8 +1346,448 @@ Not every cloud providers has VPC. Thre are alternatives:
 - Container Network Interface (CNI).
 Software that provides libraries/ plugins for network interface within containers eg. Calico, Weave.
 - An Overlay Network eg. Flannel
+</details>
+
+
+
+
+###### Pod Security Policies
+<details>
+<summary>Click to expand Pod Security Policies!</summary>
+A PodSecurityPolicy is a Kubernetes API object. You can create them without any modifications to Kubernetes. However, the policies created are not enforced by default.
+
+Kubernetes, by default, allows anything capable of creating a Pod to run a fairly privileged container that can compromise a system. Pod Security Policies protect clusters from privileged pods by ensuring the requester is authorized to create a pod as configured.
+
+To automate the enforcement of security contexts, you can define PodSecurityPolicies (PSP). A PSP is defined via a standard Kubernetes manifest following the PSP API schema.
+These policies are cluster-level rules that govern what a pod can do, what they can access, what user they run as, etc.
+
+For instance, if you do not want any of the containers in your cluster to run as the root user, you can define a PSP to that effect. You can also prevent containers from being privileged or use the host network namespace, or the host PID namespace.
+
+While PSP has been helpful, there are other methods gaining popularity. The Open Policy Agent (OPA), often pronounced as "oh-pa", provides a unified set of tools and policy framework. This allows a single point of configuration for all of your cloud deployments.
+
+OPA can be deployed as an admission controller inside of Kubernetes, which allows OPA to enforce or mutate requests as they are received. Using the OPA Gatekeeper it can be deployed using Custom Resource Definitions.
+
+For Pod Security Policies to be enabled, you need to configure the admission controller of the controller-manager to contain PodSecurityPolicy. These policies make even more sense when coupled with the RBAC configuration in your cluster. This will allow you to finely tune what your users are allowed to run and what capabilities and low level privileges their containers will have.
+
+<table>
+
+<td> PodSecurityPolicy
+<td>
+
+``` yaml
+apiVersion: policy/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  name: restrictive
+spec:
+  privileged: false
+  hostNetwork: false
+  allowPrivilegeEscalation: false
+  defaultAllowPrivilegeEscalation: false
+  hostPID: false
+  hostIPC: false
+  runAsUser:
+    rule: RunAsAny
+  fsGroup:
+    rule: RunAsAny
+  seLinux:
+    rule: RunAsAny
+  supplementalGroups:
+    rule: RunAsAny
+  volumes:
+  - 'configMap'
+  - 'downwardAPI'
+  - 'emptyDir'
+  - 'persistentVolumeClaim'
+  - 'secret'
+  - 'projected'
+  allowedCapabilities:
+  - '*'
+```
+
+</table>
+
+<h3>Admission Controller</h3>
+Admission controllers intercept requests to the kube-apiserver. The interception occurs before a requested object is persisted but after the request is authenticated and authorized. This enables us to see who or what the requested object came from and validate whether what's being asking for is appropriate. Admission controllers are enabled by adding them to the kube-apiserver flag --enable-admission-plugins. Prior to 1.10, the order of admission controllers mattered when using the, now deprecated, --admission-control flag.
+
+Add the PodSecurityPolicy to the --enabled-admission-plugins flag on the kube-apiserver.
+
+```
+--enable-admission-plugins=NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,DefaultTolerationSeconds,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,ResourceQuota,PodSecurityPolicy
+```
+
+PodSecurityPolicy has been appended to that list above. Now that Pod Security Policies are enforced and our cluster is absent of policies, new pod creations (including re-creating pods from a scheduling event) will fail.
+
+Create an nginx deployment.
+
+``` yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  namespace: default
+  labels:
+    app: nginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.15.4
+```
+
+Check the available pods, replicasets, and deployments in the namespace. Then delete the deployment.
+
+``` yaml
+kubectl get po,rs,deploy
+
+NAME                                                            DESIRED   CURRENT   READY   AGE
+replicaset.extensions/nginx-hostnetwork-deployment-811c4cff45   1         0         0       9s
+
+NAME                                                 READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.extensions/nginx-hostnetwork-deployment   0/1     0            0           9s
+kubectl delete deploy nginx-deployment
+```
+
+This demonstrates that the deployment and replicaset were created but the pod could not be created by the replicaset controller. This is where service accounts come in.
+
+<h4>Service Accounts: Controller Manager<h4>
+
+Pods are rarely created by users. Typically a user creates a Deployment, StatefulSet, Job, or Daemonset. This in turn relies on a controller to create the pod. With this in mind, the kube-controller-manager should be configured to use individual service accounts for each controller it contains.
+
+This can be accomplished by adding the following flag to the command args.
+
+```
+--use-service-account-credentials=true
+```
+
+This flag is the default for most installers and tooling such as kubeadm.
+
+When the kube-controller-manager starts with this flag, it'll make use of the following service accounts, automatically generated by Kubernetes.
+
+```
+kubectl get sa -n kube-system
+```
+
+```
+attachdetach-controller
+certificate-controller
+clusterrole-aggregation-controller
+cronjob-controller
+daemon-set-controller
+deployment-controller
+disruption-controller
+endpoint-controller
+job-controller
+namespace-controller
+node-controller
+pv-protection-controller
+pvc-protection-controller
+replicaset-controller
+replication-controller
+resourcequota-controller
+service-account-controller
+service-controller
+statefulset-controller
+ttl-controller
+```
+
+<table>
+<td>Start by creating ClusterRoles that allow the use of the restrictive policy and permissive policy.
+<td>
+
+``` yaml
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: psp-restrictive
+rules:
+- apiGroups:
+  - extensions
+  resources:
+  - podsecuritypolicies
+  resourceNames:
+  - restrictive
+  verbs:
+  - use
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: psp-permissive
+rules:
+- apiGroups:
+  - extensions
+  resources:
+  - podsecuritypolicies
+  resourceNames:
+  - permissive
+  verbs:
+  - use
+  ```
+<tr>
+<td>With the ClusterRoles in place, let's start by creating access to use the “default” restrictive policy.
+
+Create a ClusterRoleBinding that grants the psp-restrictive ClusterRole to all controller (system) service accounts.
+
+<td>
+
+``` yaml
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: psp-default
+subjects:
+- kind: Group
+  name: system:serviceaccounts
+  namespace: kube-system
+roleRef:
+  kind: ClusterRole
+  name: psp-restrictive
+  apiGroup: rbac.authorization.k8s.io
+```
+
+<tr>
+<td>Create the nginx deployment again.
+
+<td>
+
+``` yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  namespace: default
+  labels:
+    app: nginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.15.4
+```
+
+<tr>
+<td>
+Get the pods, replicasets, and deployments for the namespace.
+
+<td>
+
+```
+kubectl get po,rs,deploy
+
+pod/nginx-hostnetwork-deployment-7c74c7d654-tl4v4   1/1     Running   0          3s
+
+NAME                                                            DESIRED   CURRENT   READY   AGE
+replicaset.extensions/nginx-hostnetwork-deployment-7c74c7d654   1         1         1       3s
+
+NAME                                                 READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.extensions/nginx-hostnetwork-deployment   1/1     1            1           3s
+```
+
+<tr>
+<td>Delete the nginx deployment.
+<td>
+
+```
+kubectl delete deploy nginx-deployment
+```
+<tr>
+<td>Create the nginx-deployment with 
+
+``` hostNetwork: true ```.
+
+<td>
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-hostnetwork-deployment
+  namespace: default
+  labels:
+    app: nginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.15.4
+      hostNetwork: true
+```
+<tr>
+<td>Get the pods, replicasets, and deployments for the namespace.
+<td>
+
+```
+kubectl get po,rs,deploy
+
+NAME                                                            DESIRED   CURRENT   READY   AGE
+replicaset.extensions/nginx-hostnetwork-deployment-597c4cff45   1         0         0       9s
+
+NAME                                                 READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.extensions/nginx-hostnetwork-deployment   0/1     0            0           9s
+```
+
+<tr>
+<td>
+Here we can see the pod is no longer able to be created by the replicaset.
+
+Describe the replicaset to better understand why it's unable to create the pod.`
+
+<td>
+
+
+``` yaml
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: RoleBinding
+metadata:
+  name: psp-permissive
+  namespace: kube-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: psp-permissive
+subjects:
+- kind: ServiceAccount
+  name: daemon-set-controller
+  namespace: kube-system
+- kind: ServiceAccount
+  name: replicaset-controller
+  namespace: kube-system
+- kind: ServiceAccount
+  name: job-controller
+  namespace: kube-system
+```
+<tr>
+<td>Now you can create a pod with hostNetwork: true in the kube-system namespace! An example deployment is as follows.
+<td>
+
+``` yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-hostnetwork-deployment
+  namespace: kube-system
+  labels:
+    app: nginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.15.4
+      hostNetwork: true
+```
+<tr>
+<td>
+What if you want to enforce the restrictive policy in a namespace but make an exception for one workload to use the permissive policy? With the current model, we only have cluster-level and namespace-level resolution. To provide workload-level resolution to the permissive policy, we can provide the workload's ServiceAccount the ability to use the psp-permissive ClusterRole.
+
+Create a specialsa ServiceAccount in the default namespace.
+<td>
+
+``` yaml
+kubectl create serviceaccount specialsa
+```
+
+<tr>
+<td>Create a RoleBinding in the default namespace binding specialsa to the psp-permissive ClusterRole.
+<td>
+
+``` yaml
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: RoleBinding
+metadata:
+  name: specialsa-psp-permissive
+  namespace: default
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: psp-permissive
+subjects:
+- kind: ServiceAccount
+  name: specialsa
+  namespace: default
+```
+<tr>
+<td>
+Create the nginx-deployment in the default namespace with the specialsa service account.
+<td>
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-hostnetwork-deployment
+  namespace: kube-system
+  labels:
+    app: nginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.15.4
+      hostNetwork: true
+	  serviceAccount: specialsa
+```
+<tr>
+<td>
+When the PodSecurityPolicy matches an admission controller to a Pod being requested, it selects that policy and moves on. When debugging, it can be helpful to see which policy was chosen. Kubernetes annotates the pod with the selected PSP so you can see just that.
+
+Search for the psp annotation on the nginx-deployment
+
+<td>
+
+```
+kubectl get po $(kubectl get po | egrep -o nginx[A-Za-z0-9-]+) -o yaml | grep -i psp
+
+kubernetes.io/psp: permissive
+```
+
+</table>
+
+
+</details>
 
 ###### Node Maintenance
+<details>
+<summary>Click to expand Node Maintenance!</summary>
 It's the Node Controller that is responsible for managing the Node objects.
 It assigns IP sapce to the node when a new node is launched.
 Its keeps the node list  up to date with the avaialable machines.
@@ -1211,18 +1798,108 @@ Node Maintenance
 When addid a new node, the kubelet will attempt to register itself.
 This is called self-registration and is the default behavior.
 It allows to easily add more nodes to the cluster without making API changes.
+</details>
+
+###### Container Runtime Interface
+<details>
+<summary>Click to expand Container Runtime Interface!</summary>
+The goal of the Container Runtime Interface (CRI) is to allow easy integration of container runtimes with kubelet. By providing a protobuf method for API, specifications and libraries, new runtimes can easily be integrated without needing deep understanding of kubelet internals.
+
+The project is in early stage, with lots of development in action. Now that Docker-CRI integration is done, new runtimes should be easily added and swapped out. At the moment, CRI-O, rktlet and frakti are listed as work-in-progress.
+</details>
 
 
-###### Components
-- Envoy: Sidecar proxy per microservice that handles inbound/outbound traffic within each Pod
-- Gateway: Inbound gateways (Ingress) and Output gateway (Engress)
-- Mixer: Policy/precondition check and telemetry
-- Pilot: Converts high level routing rules that control traffic behaviour into Envoy-specific configurations, propagates them to the sidecar at runtime
-- Citadel: Certificate Authority for service-to-service auth and encryption
+###### Container Storage Interface
+<details>
+<summary>Click to expand Container Storage Interface!</summary>
+Adoption of Container Storage Interface (CSI) enables the goal of an industry standard interface for container orchestration to allow access to arbitrary storage systems. Currently, volume plugins are "in-tree", meaning they are compiled and built with the core Kubernetes binaries. This "out-of-tree" object will allow storage vendors to develop a single driver and allow the plugin to be containerized. This will replace the existing Flex plugin which requires elevated access to the host node, a large security concern.
+</details>
 
+
+###### Authentication Authorization Admission Control
+<details>
+<summary>Click to expand Authentication Authorization Admission Control!</summary>
+To perform any action in a Kubernetes cluster, you need to access the API and go through three main steps:
+
+- Authentication (Certificate or Webhook)
+- Authorization (RBAC or Webhook)
+- Admission Controls.
+
+Admission Control part of the kube-apiserver, which handles and possibly modifies the API requests, asks an outside server, or deny or accept those requests.
+Once a request reaches the API server securely, it will first go through any authentication module that has been configured. The request can be rejected if authentication fails or it gets authenticated and passed to the authorization step.
+
+At the authorization step, the request will be checked against existing policies. It will be authorized if the user has the permissions to perform the requested actions. Then, the requests will go through the last step of admission controllers. In general, admission controllers will check the actual content of the objects being created and validate them before admitting the request.
+
+:: Authentication::
+The type of authentication used is defined in the kube-apiserver startup options. Below are four examples of a subset of configuration options that would need to be set depending on what choice of authentication mechanism you choose:
+
+```
+--basic-auth-file
+
+--oidc-issuer-url
+
+--token-auth-file
+
+--authorization-webhook-config-file
+
+```
+
+One or more Authenticator Modules are used: x509 Client Certs; static token, bearer or bootstrap token; static password file; service account and OpenID connect tokens. Each is tried until successful, and the order is not guaranteed. Anonymous access can also be enabled, otherwise you will get a 401 response. Users are not created by the API, and should be managed by an external system.
+
+::Authorization::
+There are three main authorization modes and two global Deny/Allow settings. The three main modes are:
+
+Node
+RBAC
+Webhook.
+They can be configured as kube-apiserver startup options:
+
+```
+--authorization-mode=Node,RBAC
+
+--authorization-mode=Webhook
+```
+
+The Node authorization is dedicated for kubelet to communicate to the kube-apiserver such that it does not need to be allowed via RBAC. All non-kubelet traffic would then be checked via RBAC.
+
+The authorization modes implement policies to allow requests. Attributes of the requests are checked against the policies (e.g. user, group, namespace, verb).
+
+
+
+While RBAC can be complex, the basic flow is to create a certificate for a subject, associate that to a role perhaps in a new namespace, and test. As users and groups are not API objects of Kubernetes, we are requiring outside authentication. After generating the certificate against the cluster certificate authority, we can set that credential for the subject using a context, which is a combination of user name, cluster name, authinfo, and possibly namespace. This information can be seen with the kubectl config get-contexts command.
+
+Roles can then be used to configure an association of apiGroups, resources, and the verbs allowed to them. The user can then be bound to a role limiting what and where they can work in the cluster.
+
+Here is a summary of the RBAC process, typically done by the cluster admin:
+
+Determine or create namespace for the subject
+Create certificate credentials for the subject
+Set the credentials for the user to the namespace using a context
+Create a role for the expected task set
+Bind the user to the role
+Verify the user has limited access.​
+
+
+
+:: Admission Controller ::
+The last step in completing an API request is one or more admission controls.
+
+Admission controllers are pieces of software that can access the content of the objects being created by the requests. They can modify the content or validate it, and potentially deny the request.
+
+Admission controllers are needed for certain features to work properly. Controllers have been added as Kubernetes matured. Starting with the 1.13.1 release of the kube-apiserver, the admission controllers are now compiled into the binary, instead of a list passed during execution. To enable or disable, you can pass the following options, changing out the plugins you want to enable or disable:
+
+``` 
+--enable-admission-plugins=NamespaceLifecycle,LimitRanger
+--disable-admission-plugins=PodNodeSelector
+```
+
+Controllers becoming more common are MutatingAdmissionWebhook and ValidatingAdmissionWebhook, which will allow the dynamic modification of the API request, providing greater flexibility. These calls reference an exterior service, such as OPA, and wait for a return API call. Each admission controller functionality is explained in the documentation. For example, the ResourceQuota controller will ensure that the object created does not violate any of the existing quotas.
+</details>
 
 
 ###### Helm
+<details>
+<summary>Click to expand Helm!</summary>
 Helm is a single binary that manages deploying Charts to Kubernetes. A chart is a packaged unit of kubernetes software(collection of files that describe a set of Kubernetes reources).
 A single chart can deploy an app, a piece of software, or database.
 Chart uses tempaltes, that are typically developed by a package maintainer.
@@ -1242,7 +1919,11 @@ helm create mychart
 ```
 will create Chart.yaml, values.yaml, templates/
 
+</details>
+
 ###### Serverless
+<details>
+<summary>Click to expand Serverless!</summary>
 Public Cloud providers often provide Serverless capabilities in which you can  deploy functions, rather than instances or containers.
 - Azure functions
 - AWS Labmda
@@ -1255,8 +1936,11 @@ Serverless in public cloud can reduce the complexity, operational coasts, and en
 - Fission
 - OpenWhisk
 You can install and use any of the projects to let developers functions on Kubernetes.
+</details>
 
 ###### Kubeless
+<details>
+<summary>Click to expand Kubeless!</summary>
 Kubeless is a Kubernetes native framerowk, it laverages the Kubernetes resources to provide auto-scaling, API routing, monitoring etc.
 It uses Custom Resource Definitions to be able to create functions.
 Once you deployed your function, you'll need to determine how it'll be triggered.
@@ -1286,8 +1970,45 @@ kubeless trigger http create myfunction --function-name myfunction --hostname my
 kubectl get svc -n ingress-nginx -o wide
 kubectl get ingresss
 ```
+</details>
 
 ###### Kops (Kubernetes Operations)
+<details>
+<summary>Click to expand Kops!</summary>
 Tool used to spin up a highly available production cluster.
 Used to setup Kubernetes on AWS.
 Works only on Mac / Linux.
+</details>
+
+
+###### Commands
+<details>
+<summary>Click to expand Commands!</summary>
+Convert dokcer-compse to K8s objects:
+
+``` bash
+curl -L https://bit.ly/2tN0bEa -o kompose
+kompose convert -f docker-compose.yaml -o localregistry.yaml
+```
+
+Run command over couple of nodes:
+
+``` bash
+for name in $(kubectl get pod -l app=try1 -o name)> do> kubectl exec $name -c simpleapp -- touch /tmp/healthy> done
+```
+
+Debug network with calicoctl
+``` bash
+curl -O -L https://github.com/projectcalico/calicoctl/releases/download/v3.11.1/calicoctl
+sudo calicoctl node status
+sudo iptables -I INPUT 5 -i eth0 -p tcp --dport 179 -m state --state NEW,ESTABLISHED -j ACCEPT
+```
+
+Evaluate Network Plugins
+``` bash
+less /var/log/calico/cni/cni.log
+```
+
+
+</details>
+
