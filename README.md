@@ -1346,6 +1346,8 @@ Not every cloud providers has VPC. Thre are alternatives:
 - Container Network Interface (CNI).
 Software that provides libraries/ plugins for network interface within containers eg. Calico, Weave.
 - An Overlay Network eg. Flannel
+Docker uses host-private networking, using the docker0 virtual bridge and veth interfaces would require being on that
+host to communicate.
 </details>
 
 ###### Network Policy
@@ -2062,7 +2064,7 @@ Works only on Mac / Linux.
 
 
 ###### Commands
-<details>
+<details open>
 <summary>Click to expand Commands!</summary>
 Convert dokcer-compse to K8s objects:
 
@@ -2089,6 +2091,182 @@ Evaluate Network Plugins
 less /var/log/calico/cni/cni.log
 ```
 
+Move workloads to other node, and cordon the node
+```bash
+kubectl drain node-1
+```
+
+Make node not schedulable, does not move pods
+
+```bash
+kubectl cordon node-1 
+```
+
+Eviction timeout:
+Optiopn of kube-controller-manager, by default after 5m kubelet, will terminate pod on node.
+
+Scan ports:
+```bash
+alias rustscan='docker run -it --rm --name rustscan rustscan/rustscan'
+```
 
 </details>
 
+
+###### kubadm
+<details>
+<summary>Click to expand Kubernetes installation with kubadm!</summary>
+
+Installing k8s:
+
+<table>
+<tr>
+<td>Install <i>docker</i>, <i>kubeadm</i>,<br><i>kubelet</i>,<br><i>kubectl</i>
+<td>
+
+```bash
+sudo -i
+apt-get update && apt-get upgrade -y
+apt-get install -y docker.io
+
+# curl -s \
+https://packages.cloud.google.com/apt/doc/apt-key.gpg \
+| apt-key add -
+
+apt-get update
+apt-get install -y \
+kubeadm=1.20.1-00 kubelet=1.20.1-00 kubectl=1.20.1-00
+apt-mark hold kubelet kubeadm kubectl
+```
+<tr>
+<td>Install CNI- calico
+<td>
+
+```bash
+wget https://docs.projectcalico.org/manifests/calico.yaml
+```
+
+<tr>
+<td>Modify hosts entry
+<td>
+
+```bash
+hostname -i
+ip addr show
+vim /etc/hosts
+10.128.0.3 k8scp #<-- Add this line
+127.0.0.1 localhost
+```
+
+
+<tr>
+<td>Run kubeadm
+<td>
+
+```bash
+vim kubeadm-config.yaml
+apiVersion: kubeadm.k8s.io/v1beta2
+kind: ClusterConfiguration
+kubernetesVersion: 1.20.1
+controlPlaneEndpoint: "k8scp:6443"
+networking:
+  podSubnet: 192.168.0.0/16 #<-- Match the IP range from the Calico config file
+
+  # journalctl -xeu kubelet | less
+kubeadm init --config=kubeadm-config.yaml --upload-certs \
+| tee kubeadm-init.out  
+```
+
+<tr>
+<td>Post installation bash completion and installation script with token
+<td>
+
+```bash
+sudo apt-get install bash-completion -y
+source <(kubectl completion bash)
+echo "source <(kubectl completion bash)" >> $HOME/.bashrc
+sudo kubeadm config print init-defaults
+```
+
+</table>
+
+</details>
+
+
+###### etcd
+<details open>
+<summary>Click to expand etcd!</summary>
+
+Backup The etcd database
+
+<table>
+<tr>
+<td>Prepare backup file
+
+<td>
+
+```bash
+ETCDCTL_API=3 etcdctl snapshot save snapshot.db
+ls snapshot.db
+```
+<tr>
+<td>Backup status
+<td>
+
+```bash
+ETCDCTL_API=3 etcdctl snapshot status snapshot.db
+```
+
+<tr>
+<td>Backup restore
+<td>
+
+```
+service kube-apiserver stop
+ETCDCTL_API=3 etcdctl snapshot restore snapshot.db --data-dir /var/lib/etcd-from-backup
+```
+
+<tr>
+<td>
+<td>
+
+```bash
+change etcd.service
+add --data-dir=/var/lib/etcd-from-backup
+sudo systemctl daemon-reload
+service etcd restart
+service kube-apiserver start
+```
+
+<tr>
+<td>
+<td>
+
+```bash
+ETCDCTL_API=3 etcdctl --endpoints=https://[127.0.0.1]:2379 \
+--cacert=/etc/kubernetes/pki/etcd/ca.crt \
+--cert=/etc/kubernetes/pki/etcd/server.crt \
+--key=/etc/kubernetes/pki/etcd/server.key \
+snapshot save /opt/snapshot-pre-boot.db
+
+
+root@controlplane:~# ETCDCTL_API=3 etcdctl  --data-dir /var/lib/etcd-from-backup \
+snapshot restore /opt/snapshot-pre-boot.db
+```
+
+```bash
+ kubectl -n kube-system exec -it etcd-master2 -- sh -c \
+"ETCDCTL_API=3 --cert=./peer.crt --key=./peer.key --cacert=./ca.crt \
+etcdctl --endpoints=https://127.0.0.1:2379 member list"
+```
+
+</table>
+
+
+
+
+
+
+
+
+</details>
